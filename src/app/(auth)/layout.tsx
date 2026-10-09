@@ -1,9 +1,5 @@
 import { Logo } from "@/components/logo";
 
-// Tout cet espace dépend de la session : rien n'est prérendrable. Avec `cacheComponents`,
-// c'est `instant = false` qui déclare une route bloquante, et non `dynamic`.
-export const instant = false;
-
 /**
  * Coquille des écrans d'accès : la marque à gauche, le formulaire à droite.
  *

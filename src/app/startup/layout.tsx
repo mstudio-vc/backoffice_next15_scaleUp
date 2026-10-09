@@ -1,10 +1,6 @@
 import { EspaceLayout } from "@/lib/espace-layout";
 import { exigerProgramme } from "@/lib/garde";
 
-// Tout cet espace dépend de la session : rien n'est prérendrable. Avec `cacheComponents`,
-// c'est `instant = false` qui déclare une route bloquante, et non `dynamic`.
-export const instant = false;
-
 // Espace des STARTUPS — lauréates du programme Next 15.
 export default async function StartupLayout({ children }: { children: React.ReactNode }) {
   const s = await exigerProgramme("next15");
