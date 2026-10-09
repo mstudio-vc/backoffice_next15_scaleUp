@@ -20,9 +20,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # La même version majeure que le serveur (Node 20) : construire sur une version plus
-          # récente laisserait passer un code que le serveur ne saurait pas exécuter.
-          node-version: 20
+          # Une seule source de vérité : `.nvmrc`. La version doit rester celle du serveur
+          # (Node 20) pour deux raisons — construire sur plus récent laisserait passer un code
+          # que le serveur ne saurait pas exécuter, et `npm ci` refuse un verrou produit par un
+          # autre npm que le sien. C'est exactement ce qui a fait échouer le premier essai.
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Installer
