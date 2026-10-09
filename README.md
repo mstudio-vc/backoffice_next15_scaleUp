@@ -39,6 +39,23 @@ personnelles. Le script est idempotent — le rejouer ne crée pas de doublon.
 
 ---
 
+## Le verrou de dépendances se régénère sous Linux
+
+```bash
+npm run verrou      # après toute modification de package.json
+```
+
+npm construit l'arborescence pour la plateforme courante. Sur macOS il hisse `fdir` à la
+racine, sur Linux il le niche sous `tinyglobby`, et les variantes wasm de Tailwind n'existent
+que côté Linux. **Un verrou produit sur macOS fait échouer `npm ci` sur le coureur et sur le
+serveur**, tous deux en Linux x86_64 — l'inverse n'est pas vrai, npm ignorant les paquets
+optionnels hors plateforme.
+
+Ça a coûté deux déploiements avant d'être compris. Le script passe par un conteneur ; Docker
+doit tourner.
+
+---
+
 ## Les décisions qui structurent le reste
 
 **La candidature est figée, la fiche est vivante.** Deux tables distinctes. `candidatures`
