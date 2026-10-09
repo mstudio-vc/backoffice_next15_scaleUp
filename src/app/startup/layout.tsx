@@ -16,10 +16,9 @@ export default async function StartupLayout({ children }: { children: React.Reac
       identite={s.nom ?? s.email}
       nav={[
         { href: "/startup", label: "Tableau de bord" },
-        { href: "/startup", label: "Mon organisation" },
-        { href: "/startup", label: "Documents" },
-        { href: "/startup", label: "Offres" },
-        { href: "/startup", label: "Annuaire" },
+        { href: "/startup/documents", label: "Documents" },
+        { href: "/startup/offres", label: "Offres" },
+        { href: "/startup/annuaire", label: "Annuaire" },
       ]}
     >
       {children}

@@ -1,5 +1,5 @@
 {
-  "id": "ea1c952c-dc21-4a78-812b-d2e7a8c38556",
+  "id": "5dcc529b-0ea8-4b46-ae96-36e7b7a63407",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -228,6 +228,129 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.demandes_offres": {
+      "name": "demandes_offres",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "offre_id": {
+          "name": "offre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "statut": {
+          "name": "statut",
+          "type": "statut_demande",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'envoyee'"
+        },
+        "cree_le": {
+          "name": "cree_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "traitee_le": {
+          "name": "traitee_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "demandes_offres_unicite_idx": {
+          "name": "demandes_offres_unicite_idx",
+          "columns": [
+            {
+              "expression": "offre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "demandes_offres_organisation_idx": {
+          "name": "demandes_offres_organisation_idx",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "demandes_offres_offre_id_offres_id_fk": {
+          "name": "demandes_offres_offre_id_offres_id_fk",
+          "tableFrom": "demandes_offres",
+          "tableTo": "offres",
+          "columnsFrom": [
+            "offre_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "demandes_offres_organisation_id_organisations_id_fk": {
+          "name": "demandes_offres_organisation_id_organisations_id_fk",
+          "tableFrom": "demandes_offres",
+          "tableTo": "organisations",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.documents": {
       "name": "documents",
       "schema": "",
@@ -245,13 +368,34 @@
           "primaryKey": false,
           "notNull": true
         },
-        "type": {
-          "name": "type",
-          "type": "type_document",
+        "titre": {
+          "name": "titre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categorie": {
+          "name": "categorie",
+          "type": "categorie_document",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'autre'"
+        },
+        "visibilite": {
+          "name": "visibilite",
+          "type": "visibilite_document",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'organisation'"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
         },
         "libelle_source": {
           "name": "libelle_source",
@@ -263,13 +407,25 @@
           "name": "nom_fichier",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "cle_stockage": {
           "name": "cle_stockage",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "taille_octets": {
+          "name": "taille_octets",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lien": {
+          "name": "lien",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "depose_par_id": {
           "name": "depose_par_id",
@@ -436,6 +592,263 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.mises_en_relation": {
+      "name": "mises_en_relation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "laureat_id": {
+          "name": "laureat_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "investisseur_id": {
+          "name": "investisseur_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "initiateur": {
+          "name": "initiateur",
+          "type": "initiateur_relation",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "statut": {
+          "name": "statut",
+          "type": "statut_demande",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'envoyee'"
+        },
+        "cree_le": {
+          "name": "cree_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "traitee_le": {
+          "name": "traitee_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "mises_en_relation_unicite_idx": {
+          "name": "mises_en_relation_unicite_idx",
+          "columns": [
+            {
+              "expression": "laureat_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "investisseur_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mises_en_relation_investisseur_idx": {
+          "name": "mises_en_relation_investisseur_idx",
+          "columns": [
+            {
+              "expression": "investisseur_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mises_en_relation_laureat_id_organisations_id_fk": {
+          "name": "mises_en_relation_laureat_id_organisations_id_fk",
+          "tableFrom": "mises_en_relation",
+          "tableTo": "organisations",
+          "columnsFrom": [
+            "laureat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mises_en_relation_investisseur_id_organisations_id_fk": {
+          "name": "mises_en_relation_investisseur_id_organisations_id_fk",
+          "tableFrom": "mises_en_relation",
+          "tableTo": "organisations",
+          "columnsFrom": [
+            "investisseur_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.offres": {
+      "name": "offres",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "partenaire_id": {
+          "name": "partenaire_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "titre": {
+          "name": "titre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "categorie": {
+          "name": "categorie",
+          "type": "categorie_offre",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'autre'"
+        },
+        "cible": {
+          "name": "cible",
+          "type": "cible_offre",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'toutes'"
+        },
+        "valide_jusqu_au": {
+          "name": "valide_jusqu_au",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "statut": {
+          "name": "statut",
+          "type": "statut_offre",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'publiee'"
+        },
+        "cree_le": {
+          "name": "cree_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "mis_a_jour_le": {
+          "name": "mis_a_jour_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "offres_partenaire_idx": {
+          "name": "offres_partenaire_idx",
+          "columns": [
+            {
+              "expression": "partenaire_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "offres_statut_idx": {
+          "name": "offres_statut_idx",
+          "columns": [
+            {
+              "expression": "statut",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "offres_partenaire_id_organisations_id_fk": {
+          "name": "offres_partenaire_id_organisations_id_fk",
+          "tableFrom": "offres",
+          "tableTo": "organisations",
+          "columnsFrom": [
+            "partenaire_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.organisations": {
       "name": "organisations",
       "schema": "",
@@ -447,9 +860,9 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "programme": {
-          "name": "programme",
-          "type": "programme",
+        "type": {
+          "name": "type",
+          "type": "type_organisation",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -520,6 +933,31 @@
           "primaryKey": false,
           "notNull": false
         },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "localisation": {
+          "name": "localisation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "secteurs": {
+          "name": "secteurs",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "logo_url": {
+          "name": "logo_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "statut": {
           "name": "statut",
           "type": "statut_organisation",
@@ -544,11 +982,11 @@
         }
       },
       "indexes": {
-        "organisations_programme_idx": {
-          "name": "organisations_programme_idx",
+        "organisations_type_idx": {
+          "name": "organisations_type_idx",
           "columns": [
             {
-              "expression": "programme",
+              "expression": "type",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -792,6 +1230,49 @@
     }
   },
   "enums": {
+    "public.categorie_document": {
+      "name": "categorie_document",
+      "schema": "public",
+      "values": [
+        "presentation",
+        "business_plan",
+        "etats_financiers",
+        "statuts",
+        "autre"
+      ]
+    },
+    "public.categorie_offre": {
+      "name": "categorie_offre",
+      "schema": "public",
+      "values": [
+        "cloud_infrastructure",
+        "juridique",
+        "comptabilite_fiscalite",
+        "banque_paiement",
+        "formation",
+        "recrutement",
+        "marketing_communication",
+        "logistique",
+        "autre"
+      ]
+    },
+    "public.cible_offre": {
+      "name": "cible_offre",
+      "schema": "public",
+      "values": [
+        "startups",
+        "pme",
+        "toutes"
+      ]
+    },
+    "public.initiateur_relation": {
+      "name": "initiateur_relation",
+      "schema": "public",
+      "values": [
+        "laureat",
+        "investisseur"
+      ]
+    },
     "public.programme": {
       "name": "programme",
       "schema": "public",
@@ -806,6 +1287,23 @@
       "values": [
         "root",
         "membre"
+      ]
+    },
+    "public.statut_demande": {
+      "name": "statut_demande",
+      "schema": "public",
+      "values": [
+        "envoyee",
+        "acceptee",
+        "refusee"
+      ]
+    },
+    "public.statut_offre": {
+      "name": "statut_offre",
+      "schema": "public",
+      "values": [
+        "publiee",
+        "retiree"
       ]
     },
     "public.statut_organisation": {
@@ -826,22 +1324,24 @@
         "suspendu"
       ]
     },
-    "public.type_document": {
-      "name": "type_document",
+    "public.type_organisation": {
+      "name": "type_organisation",
       "schema": "public",
       "values": [
-        "rccm",
-        "piece_identite",
-        "etats_financiers",
-        "cv_direction",
-        "organigramme",
-        "cap_table",
-        "statuts",
-        "attestation_fiscale",
-        "attestation_cnps",
-        "propriete_intellectuelle",
-        "certificat",
-        "autre"
+        "startup",
+        "pme",
+        "partenaire",
+        "investisseur"
+      ]
+    },
+    "public.visibilite_document": {
+      "name": "visibilite_document",
+      "schema": "public",
+      "values": [
+        "organisation",
+        "investisseurs",
+        "partenaires",
+        "tous"
       ]
     }
   },

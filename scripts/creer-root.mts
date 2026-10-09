@@ -7,7 +7,11 @@
  *
  *   npm run creer:root -- admin@ivoire.tech "Nom Prénom"
  */
-import "dotenv/config";
+// Next lit `.env.local` puis `.env` ; les scripts doivent suivre la même convention, sans quoi
+// ils ne verraient pas la configuration du poste de développement.
+import { config } from "dotenv";
+config({ path: ".env.local" });
+config({ path: ".env" });
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { utilisateurs } from "@/db/schema";

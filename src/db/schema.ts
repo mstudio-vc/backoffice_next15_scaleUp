@@ -1,5 +1,7 @@
 import {
+  date,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -18,6 +20,21 @@ import {
  */
 export const programme = pgEnum("programme", ["next15", "scaleup"]);
 
+/**
+ * Ce qu'est une organisation dans l'annuaire. `startup` et `pme` sont les lauréats — des deux
+ * programmes respectivement ; `partenaire` publie des offres, `investisseur` reçoit des mises
+ * en relation.
+ *
+ * Le programme ne vit plus ici : il se déduit du type (voir `programmeDe`). Le garder en
+ * double inviterait la dérive.
+ */
+export const typeOrganisation = pgEnum("type_organisation", [
+  "startup",
+  "pme",
+  "partenaire",
+  "investisseur",
+]);
+
 export const statutOrganisation = pgEnum("statut_organisation", [
   "en_attente",
   "validee",
@@ -33,20 +50,46 @@ export const statutUtilisateur = pgEnum("statut_utilisateur", [
   "suspendu",
 ]);
 
-export const typeDocument = pgEnum("type_document", [
-  "rccm",
-  "piece_identite",
+export const categorieDocument = pgEnum("categorie_document", [
+  "presentation",
+  "business_plan",
   "etats_financiers",
-  "cv_direction",
-  "organigramme",
-  "cap_table",
   "statuts",
-  "attestation_fiscale",
-  "attestation_cnps",
-  "propriete_intellectuelle",
-  "certificat",
   "autre",
 ]);
+
+/**
+ * Qui voit un document. Par défaut, personne hors de l'organisation : les candidatures portent
+ * pièces d'identité et états financiers, le défaut doit être le plus fermé.
+ */
+export const visibiliteDocument = pgEnum("visibilite_document", [
+  "organisation",
+  "investisseurs",
+  "partenaires",
+  "tous",
+]);
+
+export const categorieOffre = pgEnum("categorie_offre", [
+  "cloud_infrastructure",
+  "juridique",
+  "comptabilite_fiscalite",
+  "banque_paiement",
+  "formation",
+  "recrutement",
+  "marketing_communication",
+  "logistique",
+  "autre",
+]);
+
+/** À qui s'adresse une offre. */
+export const cibleOffre = pgEnum("cible_offre", ["startups", "pme", "toutes"]);
+
+export const statutOffre = pgEnum("statut_offre", ["publiee", "retiree"]);
+
+export const statutDemande = pgEnum("statut_demande", ["envoyee", "acceptee", "refusee"]);
+
+/** Qui a pris l'initiative d'une mise en relation. */
+export const initiateurRelation = pgEnum("initiateur_relation", ["laureat", "investisseur"]);
 
 /**
  * L'organisation lauréate : le profil VIVANT.
@@ -58,7 +101,7 @@ export const organisations = pgTable(
   "organisations",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    programme: programme("programme").notNull(),
+    type: typeOrganisation("type").notNull(),
     denominationSociale: text("denomination_sociale").notNull(),
     nomCommercial: text("nom_commercial"),
     formeJuridique: text("forme_juridique"),
@@ -70,12 +113,18 @@ export const organisations = pgTable(
     emailOfficiel: text("email_officiel"),
     siteInternet: text("site_internet"),
     linkedin: text("linkedin"),
+    /** Présentation courte, affichée dans l'annuaire. */
+    description: text("description"),
+    localisation: text("localisation"),
+    /** Secteurs d'activité, affichés en étiquettes dans l'annuaire. */
+    secteurs: jsonb("secteurs").$type<string[]>().notNull().default([]),
+    logoUrl: text("logo_url"),
     statut: statutOrganisation("statut").notNull().default("en_attente"),
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
     misAJourLe: timestamp("mis_a_jour_le", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index("organisations_programme_idx").on(t.programme),
+    index("organisations_type_idx").on(t.type),
     index("organisations_statut_idx").on(t.statut),
   ],
 );
@@ -202,11 +251,18 @@ export const documents = pgTable(
     organisationId: uuid("organisation_id")
       .notNull()
       .references(() => organisations.id, { onDelete: "cascade" }),
-    type: typeDocument("type").notNull().default("autre"),
+    titre: text("titre").notNull(),
+    categorie: categorieDocument("categorie").notNull().default("autre"),
+    visibilite: visibiliteDocument("visibilite").notNull().default("organisation"),
+    /** Redéposer sous le même titre incrémente la version ; rien n'est écrasé. */
+    version: integer("version").notNull().default(1),
     /** Le libellé du champ de candidature dont il provient, quand il en vient. */
     libelleSource: text("libelle_source"),
-    nomFichier: text("nom_fichier").notNull(),
-    cleStockage: text("cle_stockage").notNull(),
+    /** Un document est SOIT un fichier déposé, SOIT un lien externe. */
+    nomFichier: text("nom_fichier"),
+    cleStockage: text("cle_stockage"),
+    tailleOctets: integer("taille_octets"),
+    lien: text("lien"),
     deposeParId: uuid("depose_par_id").references(() => utilisateurs.id, { onDelete: "set null" }),
     deposeLe: timestamp("depose_le", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -230,4 +286,75 @@ export const journal = pgTable(
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("journal_cree_le_idx").on(t.creeLe)],
+);
+
+/**
+ * Les offres publiées par les partenaires.
+ *
+ * Elles sont rattachées à l'organisation partenaire, pas à un compte : dans la version à trois
+ * espaces, les partenaires n'ont pas d'accès et c'est l'administration qui publie pour eux.
+ * Le jour où un espace partenaire existera, rien ne change ici.
+ */
+export const offres = pgTable(
+  "offres",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    partenaireId: uuid("partenaire_id")
+      .notNull()
+      .references(() => organisations.id, { onDelete: "cascade" }),
+    titre: text("titre").notNull(),
+    description: text("description").notNull(),
+    categorie: categorieOffre("categorie").notNull().default("autre"),
+    cible: cibleOffre("cible").notNull().default("toutes"),
+    valideJusquAu: date("valide_jusqu_au"),
+    statut: statutOffre("statut").notNull().default("publiee"),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    misAJourLe: timestamp("mis_a_jour_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("offres_partenaire_idx").on(t.partenaireId), index("offres_statut_idx").on(t.statut)],
+);
+
+/** Une demande d'un lauréat pour bénéficier d'une offre. Une seule par couple offre/lauréat. */
+export const demandesOffres = pgTable(
+  "demandes_offres",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    offreId: uuid("offre_id")
+      .notNull()
+      .references(() => offres.id, { onDelete: "cascade" }),
+    organisationId: uuid("organisation_id")
+      .notNull()
+      .references(() => organisations.id, { onDelete: "cascade" }),
+    message: text("message"),
+    statut: statutDemande("statut").notNull().default("envoyee"),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    traiteeLe: timestamp("traitee_le", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("demandes_offres_unicite_idx").on(t.offreId, t.organisationId),
+    index("demandes_offres_organisation_idx").on(t.organisationId),
+  ],
+);
+
+/** Mise en relation entre un lauréat et un investisseur. Une seule par couple. */
+export const misesEnRelation = pgTable(
+  "mises_en_relation",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    laureatId: uuid("laureat_id")
+      .notNull()
+      .references(() => organisations.id, { onDelete: "cascade" }),
+    investisseurId: uuid("investisseur_id")
+      .notNull()
+      .references(() => organisations.id, { onDelete: "cascade" }),
+    initiateur: initiateurRelation("initiateur").notNull(),
+    message: text("message"),
+    statut: statutDemande("statut").notNull().default("envoyee"),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    traiteeLe: timestamp("traitee_le", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("mises_en_relation_unicite_idx").on(t.laureatId, t.investisseurId),
+    index("mises_en_relation_investisseur_idx").on(t.investisseurId),
+  ],
 );

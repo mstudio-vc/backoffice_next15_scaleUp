@@ -8,8 +8,8 @@ export default async function AdminAccueil() {
   await exigerRoot();
 
   const [[next15], [scaleup], [comptes], [dossiers]] = await Promise.all([
-    db.select({ n: count() }).from(organisations).where(eq(organisations.programme, "next15")),
-    db.select({ n: count() }).from(organisations).where(eq(organisations.programme, "scaleup")),
+    db.select({ n: count() }).from(organisations).where(eq(organisations.type, "startup")),
+    db.select({ n: count() }).from(organisations).where(eq(organisations.type, "pme")),
     db.select({ n: count() }).from(utilisateurs),
     db.select({ n: count() }).from(candidatures),
   ]);

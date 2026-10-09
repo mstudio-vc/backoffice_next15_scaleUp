@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { organisations, utilisateurs } from "@/db/schema";
+import { TYPE_ORGANISATION } from "@/lib/vocabulaire";
 import { ouvrirAcces } from "@/lib/acces";
 import { exigerRoot } from "@/lib/garde";
 
@@ -16,7 +17,7 @@ export default async function Acces() {
 
   const [orgs, comptes] = await Promise.all([
     db
-      .select({ id: organisations.id, nom: organisations.denominationSociale, programme: organisations.programme })
+      .select({ id: organisations.id, nom: organisations.denominationSociale, type: organisations.type })
       .from(organisations)
       .orderBy(organisations.denominationSociale),
     db
@@ -28,7 +29,7 @@ export default async function Acces() {
         statut: utilisateurs.statut,
         creeLe: utilisateurs.creeLe,
         organisation: organisations.denominationSociale,
-        programme: organisations.programme,
+        typeOrganisation: organisations.type,
       })
       .from(utilisateurs)
       .leftJoin(organisations, eq(organisations.id, utilisateurs.organisationId))
@@ -112,7 +113,7 @@ export default async function Acces() {
               <option value="">— aucune (compte d&apos;administration) —</option>
               {orgs.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.nom} · {o.programme === "next15" ? "Next 15" : "Scale Up"}
+                  {o.nom} · {TYPE_ORGANISATION[o.type]}
                 </option>
               ))}
             </select>
@@ -154,9 +155,9 @@ export default async function Acces() {
                   </td>
                   <td className="py-3 pr-4 text-slate-600">
                     {c.organisation ?? "—"}
-                    {c.programme ? (
+                    {c.typeOrganisation ? (
                       <span className="block text-xs text-slate-500">
-                        {c.programme === "next15" ? "Next 15" : "Scale Up"}
+                        {TYPE_ORGANISATION[c.typeOrganisation]}
                       </span>
                     ) : null}
                   </td>

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { sessions, utilisateurs } from "@/db/schema";
+import { programmeDe } from "@/lib/vocabulaire";
 import { empreinteJeton, genererJeton } from "@/lib/auth/jeton";
 
 const COOKIE = "n15_session";
@@ -61,14 +62,13 @@ export async function sessionCourante(): Promise<Session | null> {
   // elle n'attend pas l'expiration.
   if (!row || row.statut !== "actif") return null;
 
-  const programme = row.organisationId
-    ? ((
-        await db.query.organisations.findFirst({
-          where: (o, { eq: e }) => e(o.id, row.organisationId!),
-          columns: { programme: true },
-        })
-      )?.programme ?? null)
+  const org = row.organisationId
+    ? await db.query.organisations.findFirst({
+        where: (o, { eq: e }) => e(o.id, row.organisationId!),
+        columns: { type: true },
+      })
     : null;
+  const programme = org ? programmeDe(org.type) : null;
 
   return {
     utilisateurId: row.utilisateurId,

@@ -12,12 +12,17 @@
  *
  * Idempotent : rejouer l'import ne crée pas de doublon (index unique programme + soumission).
  */
-import "dotenv/config";
+// Next lit `.env.local` puis `.env` ; les scripts doivent suivre la même convention, sans quoi
+// ils ne verraient pas la configuration du poste de développement.
+import { config } from "dotenv";
+config({ path: ".env.local" });
+config({ path: ".env" });
 import { createHash } from "node:crypto";
 import ExcelJS from "exceljs";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { candidatures, organisations } from "@/db/schema";
+import { typeDuProgramme } from "@/lib/vocabulaire";
 
 type Programme = "next15" | "scaleup";
 
@@ -70,15 +75,20 @@ async function importer(chemin: string): Promise<{ programme: Programme; lus: nu
     if (!denomination) continue; // ligne vide en fin de feuille
     lus += 1;
 
-    // Jotform ne fournit un `Submission ID` que sur le formulaire Scale Up. À défaut, une
-    // empreinte de la dénomination et de la date de dépôt tient lieu de clé : stable d'un
-    // export à l'autre, ce qui est tout ce qu'on demande à une clé d'idempotence.
+    // Jotform ne fournit un `Submission ID` que sur le formulaire Scale Up. À défaut, la clé
+    // est une empreinte de la LIGNE ENTIÈRE.
+    //
+    // Pourquoi pas dénomination + date : `Submission Date` n'a qu'une précision au jour, et
+    // quatre entreprises ont déposé deux fois le même jour — une clé plus grossière les aurait
+    // fondues en une seule, donc perdu des candidatures réelles.
+    //
+    // Contrepartie assumée : si un export ultérieur ajoute ou renomme une colonne, toutes les
+    // empreintes changent et un réimport créerait des doublons. Pour une reprise ponctuelle de
+    // 155 lauréats, c'est le bon compromis — perdre une candidature est pire qu'en dédoublonner
+    // une à la main.
     const submissionId =
       ligne["Submission ID"] ??
-      createHash("sha256")
-        .update(`${denomination}|${ligne["Submission Date"] ?? ""}`)
-        .digest("hex")
-        .slice(0, 32);
+      createHash("sha256").update(JSON.stringify(ligne)).digest("hex").slice(0, 32);
 
     const dejaLa = await db
       .select({ id: candidatures.id })
@@ -94,7 +104,7 @@ async function importer(chemin: string): Promise<{ programme: Programme; lus: nu
       const [org] = await tx
         .insert(organisations)
         .values({
-          programme,
+          type: typeDuProgramme(programme),
           denominationSociale: denomination,
           nomCommercial: ligne[FICHE.nomCommercial],
           formeJuridique: ligne[FICHE.formeJuridique],

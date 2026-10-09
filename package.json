@@ -10,8 +10,8 @@
     "db:generer": "drizzle-kit generate",
     "db:migrer": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "creer:root": "tsx --conditions=react-server scripts/creer-root.ts",
-    "importer:candidatures": "tsx --conditions=react-server scripts/importer-candidatures.ts"
+    "creer:root": "tsx --conditions=react-server scripts/creer-root.mts",
+    "importer:candidatures": "tsx --conditions=react-server scripts/importer-candidatures.mts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.4",
