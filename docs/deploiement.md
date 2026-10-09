@@ -7,6 +7,9 @@ nouveau vhost, `apache2ctl configtest` avant tout rechargement, et `reload` plut
 
 Dernière vérification du serveur : 9 octobre 2026.
 
+> **Étapes 1 à 10 exécutées le 9 octobre 2026.** Il reste les secrets GitHub, la branche
+> `production`, et le SMTP.
+
 ---
 
 ## 1. Ce qui change par rapport aux autres sites
@@ -47,12 +50,25 @@ ssh ivoire
 ### Le compte et les dossiers
 
 ```bash
-adduser --system --group --home /var/www/app.ivoire.tech --shell /bin/sh deploy-app
-usermod -g www-data deploy-app
+adduser --system --home /var/www/app.ivoire.tech --shell /bin/sh --ingroup www-data deploy-app
+install -d -o deploy-app -g www-data -m 2755 /var/www/app.ivoire.tech
 install -d -o deploy-app -g www-data -m 2755 /var/www/app.ivoire.tech/courant
-install -d -o deploy-app -g www-data -m 2750 /var/www/app.ivoire.tech/stockage
-install -d -o deploy-app -g deploy-app -m 700 /var/www/app.ivoire.tech/.ssh
+install -d -o deploy-app -g www-data -m 2700 /var/www/app.ivoire.tech/stockage
+install -d -o deploy-app -g www-data -m 700  /var/www/app.ivoire.tech/.ssh
 ```
+
+`--shell /bin/sh` est indispensable : `adduser --system` pose `nologin` par défaut, et le
+workflow ne pourrait plus lancer les migrations ni le redémarrage.
+
+Le `2` de `2755` est le bit setgid : tout fichier créé hérite du groupe `www-data`, sinon les
+droits dérivent au fil des déploiements.
+
+`stockage/` est en **2700**, et non 2755 comme le reste : il contiendra des pièces d'identité
+et des états financiers, et **Apache n'a aucune raison de les lire** — les documents sont
+servis par l'application, qui vérifie les droits à chaque lecture.
+
+Il est **à côté** de `courant/`, jamais dedans : `rsync --delete` écrase `courant/` à chaque
+déploiement, et les documents déposés disparaîtraient.
 
 Déposer la clé publique de déploiement dans
 `/var/www/app.ivoire.tech/.ssh/authorized_keys` (`600`, propriétaire `deploy-app`).
@@ -60,14 +76,21 @@ Déposer la clé publique de déploiement dans
 ### La base
 
 ```bash
-su - postgres -c "createuser app_ivoire_tech --pwprompt"
-su - postgres -c "createdb app_ivoire_tech --owner app_ivoire_tech"
+MDP=$(openssl rand -hex 24)
+su - postgres -s /bin/sh -c 'psql -v ON_ERROR_STOP=1 -q' <<SQL
+CREATE ROLE app_ivoire_tech LOGIN PASSWORD '${MDP}';
+SQL
+su - postgres -s /bin/sh -c 'createdb app_ivoire_tech --owner app_ivoire_tech'
 ```
+
+Le mot de passe passe par l'entrée standard de `psql`, jamais par la ligne de commande : il
+n'apparaît donc pas dans la liste des processus.
 
 ### La configuration
 
-`/etc/app-ivoire-tech.env`, en `640`, propriétaire `root`, groupe `deploy-app` — le compte de
-déploiement doit la lire pour les migrations, mais personne d'autre :
+`/etc/app-ivoire-tech.env`, en **`400`, propriétaire `deploy-app`, groupe `root`**. Surtout pas
+le groupe `www-data` : Apache tourne dessous, et n'a aucune raison de connaître le mot de passe
+de la base. Le mot de passe est engendré sur le serveur et n'en sort jamais :
 
 ```
 DATABASE_URL=postgresql://app_ivoire_tech:<mot de passe>@127.0.0.1:5432/app_ivoire_tech
