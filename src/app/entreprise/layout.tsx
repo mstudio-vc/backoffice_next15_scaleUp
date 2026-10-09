@@ -10,10 +10,11 @@ export default async function EntrepriseLayout({ children }: { children: React.R
   const s = await exigerProgramme("scaleup");
   return (
     <EspaceLayout
-      titre="Ivoire Tech Scale Up"
-      sousTitre="Espace entreprise"
-      accent="bg-teal-800"
+      programme={"scaleup"}
+      sousTitre={"Espace entreprise"}
+      teinte={"bg-menthe/20 text-vert"}
       identite={s.nom ?? s.email}
+      role="Lauréat"
       nav={[
         { href: "/entreprise", label: "Tableau de bord" },
         { href: "/entreprise/documents", label: "Documents" },

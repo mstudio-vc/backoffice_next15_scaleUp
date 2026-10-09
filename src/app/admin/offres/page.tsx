@@ -108,20 +108,20 @@ export default async function AdminOffres() {
     revalidatePath("/admin/offres");
   }
 
-  const champ = "h-11 rounded-lg border border-slate-300 px-3 font-normal";
+  const champ = "h-11 rounded-lg border border-brume px-3 font-normal";
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h1 className="text-lg font-semibold">Publier une offre</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-pierre">
           Les partenaires n&apos;ont pas d&apos;espace à eux : l&apos;administration publie pour
           leur compte. L&apos;offre est rattachée à l&apos;organisation partenaire, pas à un
           compte — le jour où un espace partenaire existera, rien ne bougera en base.
         </p>
 
         {partenaires.length === 0 ? (
-          <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="mt-4 rounded-lg bg-orange/10 px-3 py-2 text-sm text-orange-sombre">
             Aucun partenaire en base. Créez-en un depuis{" "}
             <a href="/admin/organisations" className="font-semibold underline">
               Organisations
@@ -130,7 +130,7 @@ export default async function AdminOffres() {
           </p>
         ) : (
           <form action={publier} className="mt-5 grid gap-4 sm:grid-cols-2">
-            <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
               Partenaire
               <select name="partenaireId" required className={champ}>
                 {partenaires.map((p) => (
@@ -138,11 +138,11 @@ export default async function AdminOffres() {
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
               Titre
               <input name="titre" required className={champ} />
             </label>
-            <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
               Catégorie
               <select name="categorie" className={champ}>
                 {Object.entries(CATEGORIE_OFFRE).map(([k, v]) => (
@@ -150,7 +150,7 @@ export default async function AdminOffres() {
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
               Public visé
               <select name="cible" className={champ}>
                 {Object.entries(CIBLE_OFFRE).map(([k, v]) => (
@@ -158,16 +158,16 @@ export default async function AdminOffres() {
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-sm font-medium text-slate-700 sm:col-span-2">
+            <label className="flex flex-col gap-1 text-sm font-medium text-graphite sm:col-span-2">
               Description
-              <textarea name="description" required rows={3} className="rounded-lg border border-slate-300 p-3 font-normal" />
+              <textarea name="description" required rows={3} className="rounded-lg border border-brume p-3 font-normal" />
             </label>
-            <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
               Valable jusqu&apos;au
               <input type="date" name="valideJusquAu" className={champ} />
             </label>
             <div className="flex items-end">
-              <button className="h-11 rounded-lg bg-slate-900 px-5 font-semibold text-white hover:bg-slate-800">
+              <button className="h-11 rounded-lg bg-vert px-5 font-semibold text-white hover:bg-vert-mid">
                 Publier
               </button>
             </div>
@@ -175,18 +175,18 @@ export default async function AdminOffres() {
         )}
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h2 className="text-lg font-semibold">Demandes des lauréats</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-pierre">
           Faute d&apos;espace partenaire, c&apos;est l&apos;administration qui répond — après
           accord du partenaire concerné.
         </p>
         <div className="mt-4 flex flex-col gap-2">
           {demandes.map((d) => (
-            <div key={d.id} className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3">
+            <div key={d.id} className="flex flex-wrap items-center gap-3 border-t border-vert/10 pt-3">
               <div className="min-w-0 grow">
                 <p className="font-medium">{d.demandeur}</p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-pierre">
                   {d.offre} · {d.partenaire} · {d.creeLe.toLocaleDateString("fr-FR")}
                 </p>
               </div>
@@ -196,54 +196,54 @@ export default async function AdminOffres() {
                   <button
                     name="statut"
                     value="acceptee"
-                    className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800"
+                    className="rounded-lg bg-vert px-3 py-1.5 text-sm font-semibold text-white hover:bg-vert-mid"
                   >
                     Accepter
                   </button>
                   <button
                     name="statut"
                     value="refusee"
-                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-graphite ring-1 ring-brume hover:bg-creme"
                   >
                     Refuser
                   </button>
                 </form>
               ) : (
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <span className="rounded-full bg-papier px-3 py-1 text-xs font-semibold text-ardoise">
                   {STATUT_DEMANDE[d.statut].toLowerCase()}
                 </span>
               )}
             </div>
           ))}
-          {demandes.length === 0 ? <p className="text-slate-500">Aucune demande.</p> : null}
+          {demandes.length === 0 ? <p className="text-pierre">Aucune demande.</p> : null}
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h2 className="text-lg font-semibold">Offres</h2>
         <div className="mt-4 flex flex-col gap-3">
           {lignes.map(({ offre, partenaire, demandes }) => (
-            <div key={offre.id} className="flex flex-wrap items-center gap-4 border-t border-slate-100 pt-3">
+            <div key={offre.id} className="flex flex-wrap items-center gap-4 border-t border-vert/10 pt-3">
               <div className="min-w-0 grow">
                 <p className="font-medium">{offre.titre}</p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-pierre">
                   {partenaire} · {CATEGORIE_OFFRE[offre.categorie]} · {CIBLE_OFFRE[offre.cible]} ·{" "}
                   {Number(demandes)} demande{Number(demandes) > 1 ? "s" : ""}
                 </p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              <span className="rounded-full bg-papier px-3 py-1 text-xs font-semibold text-ardoise">
                 {offre.statut === "publiee" ? "publiée" : "retirée"}
               </span>
               <form action={basculer}>
                 <input type="hidden" name="offreId" value={offre.id} />
                 <input type="hidden" name="vers" value={offre.statut === "publiee" ? "retiree" : "publiee"} />
-                <button className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+                <button className="rounded-lg px-3 py-1.5 text-sm font-medium text-graphite ring-1 ring-brume hover:bg-creme">
                   {offre.statut === "publiee" ? "Retirer" : "Republier"}
                 </button>
               </form>
             </div>
           ))}
-          {lignes.length === 0 ? <p className="text-slate-500">Aucune offre.</p> : null}
+          {lignes.length === 0 ? <p className="text-pierre">Aucune offre.</p> : null}
         </div>
       </section>
     </div>

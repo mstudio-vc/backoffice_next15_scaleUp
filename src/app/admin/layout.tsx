@@ -10,10 +10,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const s = await exigerRoot();
   return (
     <EspaceLayout
-      titre="Administration"
-      sousTitre="Next 15 & Scale Up"
-      accent="bg-slate-900"
+      programme={null}
+      sousTitre="Administration"
+      teinte="bg-orange/15 text-orange-sombre"
       identite={s.nom ?? s.email}
+      role="Administration du programme"
       nav={[
         { href: "/admin", label: "Vue d'ensemble" },
         { href: "/admin/organisations", label: "Organisations" },

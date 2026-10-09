@@ -67,16 +67,16 @@ export default async function AdminOrganisations() {
     revalidatePath("/admin/organisations");
   }
 
-  const champ = "h-11 rounded-lg border border-slate-300 px-3 font-normal";
+  const champ = "h-11 rounded-lg border border-brume px-3 font-normal";
 
   return (
     <div className="flex flex-col gap-8">
       {enAttente.length > 0 ? (
-        <section className="rounded-2xl bg-amber-50 p-6 ring-1 ring-amber-200">
-          <h1 className="text-lg font-semibold text-amber-900">
+        <section className="rounded-2xl bg-orange/10 p-6 ring-1 ring-orange/30">
+          <h1 className="text-lg font-semibold text-orange-sombre">
             {enAttente.length} organisation{enAttente.length > 1 ? "s" : ""} en attente de validation
           </h1>
-          <p className="mt-1 text-sm text-amber-800">
+          <p className="mt-1 text-sm text-orange-sombre">
             Tant qu&apos;une organisation n&apos;est pas validée, elle n&apos;apparaît pas dans
             l&apos;annuaire et ses membres ne voient pas les autres.
           </p>
@@ -84,20 +84,20 @@ export default async function AdminOrganisations() {
             {enAttente.map((o) => (
               <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3">
                 <span className="min-w-0 grow font-medium">{o.denominationSociale}</span>
-                <span className="text-sm text-slate-500">{TYPE_ORGANISATION[o.type]}</span>
+                <span className="text-sm text-pierre">{TYPE_ORGANISATION[o.type]}</span>
                 <form action={changerStatut} className="flex gap-2">
                   <input type="hidden" name="organisationId" value={o.id} />
                   <button
                     name="statut"
                     value="validee"
-                    className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800"
+                    className="rounded-lg bg-vert px-3 py-1.5 text-sm font-semibold text-white hover:bg-vert-mid"
                   >
                     Valider
                   </button>
                   <button
                     name="statut"
                     value="suspendue"
-                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-graphite ring-1 ring-brume hover:bg-creme"
                   >
                     Refuser
                   </button>
@@ -108,53 +108,53 @@ export default async function AdminOrganisations() {
         </section>
       ) : null}
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h2 className="text-lg font-semibold">Ajouter un partenaire ou un investisseur</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-pierre">
           Les lauréats, eux, arrivent par l&apos;import des candidatures — on ne les saisit pas
           à la main.
         </p>
         <form action={creer} className="mt-5 grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             Nom
             <input name="nom" required className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             Type
             <select name="type" className={champ}>
               <option value="partenaire">Partenaire</option>
               <option value="investisseur">Investisseur</option>
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             Localisation
             <input name="localisation" placeholder="Abidjan" className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             Site internet
             <input name="siteInternet" type="url" className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700 sm:col-span-2">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite sm:col-span-2">
             Description
             <input name="description" className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700 sm:col-span-2">
-            Secteurs <span className="font-normal text-slate-500">(séparés par des virgules)</span>
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite sm:col-span-2">
+            Secteurs <span className="font-normal text-pierre">(séparés par des virgules)</span>
             <input name="secteurs" placeholder="Fintech, Agritech" className={champ} />
           </label>
           <div>
-            <button className="h-11 rounded-lg bg-slate-900 px-5 font-semibold text-white hover:bg-slate-800">
+            <button className="h-11 rounded-lg bg-vert px-5 font-semibold text-white hover:bg-vert-mid">
               Ajouter
             </button>
           </div>
         </form>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h2 className="text-lg font-semibold">Toutes les organisations</h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[42rem] text-sm">
-            <thead className="text-left text-xs tracking-wide text-slate-500 uppercase">
+            <thead className="text-left text-xs tracking-wide text-pierre uppercase">
               <tr>
                 <th className="py-2 pr-4">Organisation</th>
                 <th className="py-2 pr-4">Type</th>
@@ -164,17 +164,17 @@ export default async function AdminOrganisations() {
             </thead>
             <tbody>
               {lignes.map((o) => (
-                <tr key={o.id} className="border-t border-slate-100">
+                <tr key={o.id} className="border-t border-vert/10">
                   <td className="py-3 pr-4 font-medium">{o.denominationSociale}</td>
-                  <td className="py-3 pr-4 text-slate-600">{TYPE_ORGANISATION[o.type]}</td>
-                  <td className="py-3 pr-4 text-slate-600">{STATUT_ORGANISATION[o.statut]}</td>
+                  <td className="py-3 pr-4 text-ardoise">{TYPE_ORGANISATION[o.type]}</td>
+                  <td className="py-3 pr-4 text-ardoise">{STATUT_ORGANISATION[o.statut]}</td>
                   <td className="py-3 text-right">
                     <form action={changerStatut}>
                       <input type="hidden" name="organisationId" value={o.id} />
                       <button
                         name="statut"
                         value={o.statut === "suspendue" ? "validee" : "suspendue"}
-                        className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                        className="rounded-lg px-3 py-1.5 text-sm font-medium text-graphite ring-1 ring-brume hover:bg-creme"
                       >
                         {o.statut === "suspendue" ? "Réactiver" : "Suspendre"}
                       </button>
@@ -184,7 +184,7 @@ export default async function AdminOrganisations() {
               ))}
               {lignes.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-slate-500">
+                  <td colSpan={4} className="py-6 text-center text-pierre">
                     Aucune organisation. Importez les lauréats, puis ajoutez les partenaires.
                   </td>
                 </tr>

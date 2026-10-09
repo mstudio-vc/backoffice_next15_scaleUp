@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
+/* Palette officielle des deux programmes, relevée sur next15.ivoire.tech et
+   scaleup.ivoire.tech. Les valeurs sont en hexadécimal, comme sur les sites, pour rester
+   vérifiables à l'œil.
+
+   Le socle est commun — vert profond, crème, orange d'accent. Chaque programme a sa teinte
+   vive : vert feuille pour Next 15, menthe pour Scale Up. C'est elle qui distingue les deux
+   espaces à l'œil, sans qu'on ait à lire. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --vert: #064534;
+  --vert-mid: #0a5c45;
+  --vert-sombre: #042b20;
+  --creme: #faf7f0;
+  --papier: #f4f1ea;
+  --encre: #0e1a16;
+  --graphite: #2a3733;
+  --ardoise: #4f5b56;
+  --pierre: #8a948f;
+  --brume: #c7ccc9;
+  --orange: #ec6726;
+  --orange-sombre: #c93f12;
+  --feuille: #13a538;
+  --menthe: #2ecf9e;
+  --blanc: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-vert: var(--vert);
+  --color-vert-mid: var(--vert-mid);
+  --color-vert-sombre: var(--vert-sombre);
+  --color-creme: var(--creme);
+  --color-papier: var(--papier);
+  --color-encre: var(--encre);
+  --color-graphite: var(--graphite);
+  --color-ardoise: var(--ardoise);
+  --color-pierre: var(--pierre);
+  --color-brume: var(--brume);
+  --color-orange: var(--orange);
+  --color-orange-sombre: var(--orange-sombre);
+  --color-feuille: var(--feuille);
+  --color-menthe: var(--menthe);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--creme);
+    color: var(--encre);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Tailwind v4 remet les boutons en curseur par défaut ; on rend la main. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Le filet tricolore des deux sites : il signe la page sans rien demander à personne. */
+@utility filet-programme {
+  background-image: linear-gradient(
+    90deg,
+    var(--vert) 0 33.33%,
+    var(--blanc) 33.33% 66.66%,
+    var(--orange) 66.66% 100%
+  );
 }

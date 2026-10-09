@@ -75,33 +75,33 @@ export async function OffresLaureat({
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold">Offres des partenaires</h1>
       {lignes.map(({ offre, partenaire, demandeStatut }) => (
-        <article key={offre.id} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+        <article key={offre.id} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10">
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-            <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-800">
+            <span className="rounded-full bg-feuille/10 px-2.5 py-1 text-vert">
               {CATEGORIE_OFFRE[offre.categorie]}
             </span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">
+            <span className="rounded-full bg-papier px-2.5 py-1 text-ardoise">
               {CIBLE_OFFRE[offre.cible]}
             </span>
             {offre.valideJusquAu ? (
-              <span className="text-slate-500">
+              <span className="text-pierre">
                 jusqu&apos;au {new Date(offre.valideJusquAu).toLocaleDateString("fr-FR")}
               </span>
             ) : null}
           </div>
           <h2 className="mt-2 font-semibold">{offre.titre}</h2>
-          <p className="text-sm text-slate-500">{partenaire}</p>
-          <p className="mt-2 text-sm whitespace-pre-line text-slate-700">{offre.description}</p>
+          <p className="text-sm text-pierre">{partenaire}</p>
+          <p className="mt-2 text-sm whitespace-pre-line text-graphite">{offre.description}</p>
 
           <div className="mt-4">
             {demandeStatut ? (
-              <span className="inline-block rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-600">
+              <span className="inline-block rounded-lg bg-papier px-3 py-1.5 text-sm font-medium text-ardoise">
                 Demande {STATUT_DEMANDE[demandeStatut].toLowerCase()}
               </span>
             ) : (
               <form action={demander}>
                 <input type="hidden" name="offreId" value={offre.id} />
-                <button className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800">
+                <button className="rounded-lg bg-vert px-4 py-2 text-sm font-semibold text-white hover:bg-vert-mid">
                   Demander cette offre
                 </button>
               </form>
@@ -110,7 +110,7 @@ export async function OffresLaureat({
         </article>
       ))}
       {lignes.length === 0 ? (
-        <p className="rounded-2xl bg-white p-6 text-center text-slate-500 shadow-sm ring-1 ring-slate-200">
+        <p className="rounded-2xl bg-white p-6 text-center text-pierre shadow-sm ring-1 ring-vert/10">
           Aucune offre publiée pour le moment.
         </p>
       ) : null}

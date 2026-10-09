@@ -88,22 +88,22 @@ export async function DocumentsLaureat({
     revalidatePath(base);
   }
 
-  const champ = "h-11 rounded-lg border border-slate-300 px-3 font-normal";
+  const champ = "h-11 rounded-lg border border-brume px-3 font-normal";
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h1 className="text-lg font-semibold">Déposer un document</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-pierre">
           Un fichier (PDF, présentation, tableur, image, {TAILLE_MAX / 1024 / 1024} Mo au plus) ou
           un lien. Redéposer sous le même titre crée une nouvelle version, sans rien effacer.
         </p>
         <form action={ajouter} className="mt-5 grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             Titre
             <input name="titre" required className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             Catégorie
             <select name="categorie" className={champ}>
               {Object.entries(CATEGORIE_DOCUMENT).map(([k, v]) => (
@@ -111,15 +111,15 @@ export async function DocumentsLaureat({
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             Fichier
-            <input type="file" name="fichier" className="rounded-lg border border-slate-300 p-2 font-normal" />
+            <input type="file" name="fichier" className="rounded-lg border border-brume p-2 font-normal" />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
             …ou un lien
             <input name="lien" type="url" placeholder="https://" className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-slate-700 sm:col-span-2">
+          <label className="flex flex-col gap-1 text-sm font-medium text-graphite sm:col-span-2">
             Qui le voit
             <select name="visibilite" className={champ}>
               {Object.entries(VISIBILITE_DOCUMENT).map(([k, v]) => (
@@ -128,18 +128,18 @@ export async function DocumentsLaureat({
             </select>
           </label>
           <div>
-            <button className="h-11 rounded-lg bg-indigo-700 px-5 font-semibold text-white hover:bg-indigo-800">
+            <button className="h-11 rounded-lg bg-vert px-5 font-semibold text-white hover:bg-vert-mid">
               Déposer
             </button>
           </div>
         </form>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h2 className="text-lg font-semibold">Mes documents</h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[46rem] text-sm">
-            <thead className="text-left text-xs tracking-wide text-slate-500 uppercase">
+            <thead className="text-left text-xs tracking-wide text-pierre uppercase">
               <tr>
                 <th className="py-2 pr-4">Document</th>
                 <th className="py-2 pr-4">Catégorie</th>
@@ -150,17 +150,17 @@ export async function DocumentsLaureat({
             </thead>
             <tbody>
               {lignes.map((d) => (
-                <tr key={d.id} className="border-t border-slate-100">
+                <tr key={d.id} className="border-t border-vert/10">
                   <td className="py-3 pr-4">
                     <span className="font-medium">{d.titre}</span>
-                    <span className="block text-xs text-slate-500">
+                    <span className="block text-xs text-pierre">
                       {d.lien ? (
-                        <a href={d.lien} target="_blank" rel="noopener noreferrer" className="text-indigo-700 hover:underline">
+                        <a href={d.lien} target="_blank" rel="noopener noreferrer" className="text-vert hover:underline">
                           Ouvrir le lien
                         </a>
                       ) : (
                         <>
-                          <a href={`/documents/${d.id}`} className="text-indigo-700 hover:underline">
+                          <a href={`/documents/${d.id}`} className="text-vert hover:underline">
                             Télécharger
                           </a>{" "}
                           · {poids(d.tailleOctets)}
@@ -168,17 +168,17 @@ export async function DocumentsLaureat({
                       )}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 text-slate-600">{CATEGORIE_DOCUMENT[d.categorie]}</td>
-                  <td className="py-3 pr-4 text-slate-600">v{d.version}</td>
-                  <td className="py-3 pr-4 text-slate-600">
+                  <td className="py-3 pr-4 text-ardoise">{CATEGORIE_DOCUMENT[d.categorie]}</td>
+                  <td className="py-3 pr-4 text-ardoise">v{d.version}</td>
+                  <td className="py-3 pr-4 text-ardoise">
                     {d.deposeLe.toLocaleDateString("fr-FR")}
                   </td>
-                  <td className="py-3 text-slate-600">{VISIBILITE_DOCUMENT[d.visibilite]}</td>
+                  <td className="py-3 text-ardoise">{VISIBILITE_DOCUMENT[d.visibilite]}</td>
                 </tr>
               ))}
               {lignes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-slate-500">
+                  <td colSpan={5} className="py-6 text-center text-pierre">
                     Aucun document déposé.
                   </td>
                 </tr>

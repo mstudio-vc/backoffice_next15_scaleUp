@@ -10,10 +10,11 @@ export default async function StartupLayout({ children }: { children: React.Reac
   const s = await exigerProgramme("next15");
   return (
     <EspaceLayout
-      titre="Ivoire Tech Next 15"
-      sousTitre="Espace startup"
-      accent="bg-indigo-700"
+      programme={"next15"}
+      sousTitre={"Espace startup"}
+      teinte={"bg-feuille/15 text-vert"}
       identite={s.nom ?? s.email}
+      role="Lauréat"
       nav={[
         { href: "/startup", label: "Tableau de bord" },
         { href: "/startup/documents", label: "Documents" },

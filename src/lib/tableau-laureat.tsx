@@ -13,7 +13,7 @@ export async function TableauLaureat({ organisationId }: { organisationId: strin
   const org = await db.query.organisations.findFirst({
     where: eq(organisations.id, organisationId),
   });
-  if (!org) return <p className="text-slate-600">Organisation introuvable.</p>;
+  if (!org) return <p className="text-ardoise">Organisation introuvable.</p>;
 
   const dossier = await db.query.candidatures.findFirst({
     where: eq(candidatures.organisationId, organisationId),
@@ -32,41 +32,62 @@ export async function TableauLaureat({ organisationId }: { organisationId: strin
     ["Site internet", org.siteInternet],
   ];
 
+  const renseignes = fiche.filter(([, v]) => v).length;
+
   return (
-    <div className="flex flex-col gap-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <div className="flex flex-wrap items-baseline gap-3">
-          <h1 className="text-xl font-semibold">{org.denominationSociale}</h1>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-            {org.statut === "validee" ? "validée" : org.statut === "en_attente" ? "en attente" : "suspendue"}
-          </span>
+    <div className="flex flex-col gap-6">
+      {/* Bandeau d'identité : le nom, l'état, et ce qu'il reste à compléter. Les candidatures
+          sont très lacunaires — autant le dire dès le premier écran plutôt que de laisser
+          découvrir des champs vides un par un. */}
+      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-vert/10">
+        <div className="bg-vert px-6 py-5 text-white">
+          <h1 className="text-2xl font-semibold">{org.denominationSociale}</h1>
+          <p className="mt-1 text-sm text-white/75">
+            {org.nomCommercial ? `${org.nomCommercial} · ` : ""}
+            {org.type === "startup" ? "Ivoire Tech Next 15" : "Ivoire Tech Scale Up"}
+            {" · "}
+            {org.statut === "validee" ? "fiche validée" : org.statut === "en_attente" ? "en attente de validation" : "suspendue"}
+          </p>
         </div>
-        <dl className="mt-5 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+
+        <dl className="grid gap-x-8 gap-y-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3">
           {fiche.map(([k, v]) => (
             <div key={k}>
-              <dt className="text-xs tracking-wide text-slate-500 uppercase">{k}</dt>
-              <dd className="text-sm">{v ?? <span className="text-slate-400">non renseigné</span>}</dd>
+              <dt className="text-[11px] font-semibold tracking-wide text-pierre uppercase">{k}</dt>
+              <dd className="mt-0.5 text-[15px] text-encre">
+                {v ?? <span className="text-brume">non renseigné</span>}
+              </dd>
             </div>
           ))}
         </dl>
+
+        <p className="border-t border-vert/10 bg-papier px-6 py-3 text-sm text-ardoise">
+          {renseignes} champ{renseignes > 1 ? "s" : ""} sur {fiche.length} renseigné
+          {renseignes > 1 ? "s" : ""}.{" "}
+          {renseignes < fiche.length
+            ? "Les champs manquants viennent d'une candidature incomplète — ils seront bientôt modifiables ici."
+            : "Votre fiche est complète."}
+        </p>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-lg font-semibold">Votre candidature</h2>
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
+        <h2 className="text-lg font-semibold text-encre">Votre candidature</h2>
         {dossier ? (
-          <p className="mt-2 text-sm text-slate-600">
-            Déposée le{" "}
-            {dossier.deposeeLe
-              ? dossier.deposeeLe.toLocaleDateString("fr-FR")
-              : "date non renseignée"}{" "}
-            · {nbChamps} réponses conservées.
-            <span className="mt-2 block text-slate-500">
+          <>
+            <p className="mt-2 text-[15px] text-ardoise">
+              Déposée le{" "}
+              <b className="text-encre">
+                {dossier.deposeeLe ? dossier.deposeeLe.toLocaleDateString("fr-FR") : "date non renseignée"}
+              </b>{" "}
+              · <b className="text-encre">{nbChamps}</b> réponses conservées.
+            </p>
+            <p className="mt-3 rounded-xl border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
               Elle est conservée telle que vous l&apos;avez signée et ne change plus. Les
               corrections se font sur votre fiche ci-dessus.
-            </span>
-          </p>
+            </p>
+          </>
         ) : (
-          <p className="mt-2 text-sm text-slate-500">Aucune candidature importée pour le moment.</p>
+          <p className="mt-2 text-[15px] text-pierre">Aucune candidature importée pour le moment.</p>
         )}
       </section>
     </div>
