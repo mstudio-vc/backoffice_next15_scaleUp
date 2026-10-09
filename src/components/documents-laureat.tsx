@@ -1,9 +1,7 @@
-import { revalidatePath } from "next/cache";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { documents, journal } from "@/db/schema";
-import { exigerSession } from "@/lib/garde";
-import { deposer, TAILLE_MAX } from "@/lib/stockage";
+import { documents } from "@/db/schema";
+import { EntetePage, Vide } from "@/components/page-entete";
 import { CATEGORIE_DOCUMENT, VISIBILITE_DOCUMENT } from "@/lib/vocabulaire";
 
 function poids(octets: number | null): string {
@@ -13,6 +11,7 @@ function poids(octets: number | null): string {
     : `${(octets / 1024 / 1024).toFixed(1)} Mo`;
 }
 
+/** La liste, et rien d'autre : le dépôt vit sur sa propre route. */
 export async function DocumentsLaureat({
   organisationId,
   base,
@@ -26,133 +25,36 @@ export async function DocumentsLaureat({
     .where(eq(documents.organisationId, organisationId))
     .orderBy(desc(documents.deposeLe));
 
-  async function ajouter(formData: FormData) {
-    "use server";
-    const session = await exigerSession();
-    // On ne fait pas confiance au champ caché : l'organisation vient de la session.
-    if (!session.organisationId) return;
-
-    const titre = String(formData.get("titre") ?? "").trim();
-    const lien = String(formData.get("lien") ?? "").trim();
-    const fichier = formData.get("fichier");
-    if (!titre) return;
-
-    // Un document est SOIT un fichier, SOIT un lien. Les deux à la fois n'aurait pas de sens
-    // au moment de l'ouvrir.
-    const aUnFichier = fichier instanceof File && fichier.size > 0;
-    if (!aUnFichier && !lien) return;
-    if (aUnFichier && fichier.size > TAILLE_MAX) return;
-
-    // Redéposer sous le même titre crée une VERSION, sans rien écraser : une pièce justificative
-    // remplacée doit rester consultable.
-    const memeTitre = await db.query.documents.findFirst({
-      where: (d, { and, eq: e }) =>
-        and(e(d.organisationId, session.organisationId!), e(d.titre, titre)),
-      orderBy: (d, { desc: dd }) => dd(d.version),
-    });
-    const version = memeTitre ? memeTitre.version + 1 : 1;
-
-    let cleStockage: string | null = null;
-    let nomFichier: string | null = null;
-    let tailleOctets: number | null = null;
-    if (aUnFichier) {
-      const depot = await deposer(
-        session.organisationId,
-        fichier.name,
-        Buffer.from(await fichier.arrayBuffer()),
-      );
-      cleStockage = depot.cle;
-      nomFichier = depot.nom;
-      tailleOctets = fichier.size;
-    }
-
-    await db.insert(documents).values({
-      organisationId: session.organisationId,
-      titre,
-      categorie: formData.get("categorie") as keyof typeof CATEGORIE_DOCUMENT,
-      visibilite: formData.get("visibilite") as keyof typeof VISIBILITE_DOCUMENT,
-      version,
-      nomFichier,
-      cleStockage,
-      tailleOctets,
-      lien: aUnFichier ? null : lien,
-      deposeParId: session.utilisateurId,
-    });
-    await db.insert(journal).values({
-      utilisateurId: session.utilisateurId,
-      organisationId: session.organisationId,
-      action: "document.depose",
-      cible: titre,
-      details: { version },
-    });
-    revalidatePath(base);
-  }
-
-  const champ = "h-11 rounded-lg border border-brume px-3 font-normal";
-
   return (
-    <div className="flex flex-col gap-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
-        <h1 className="text-lg font-semibold">Déposer un document</h1>
-        <p className="mt-1 text-sm text-pierre">
-          Un fichier (PDF, présentation, tableur, image, {TAILLE_MAX / 1024 / 1024} Mo au plus) ou
-          un lien. Redéposer sous le même titre crée une nouvelle version, sans rien effacer.
-        </p>
-        <form action={ajouter} className="mt-5 grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
-            Titre
-            <input name="titre" required className={champ} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
-            Catégorie
-            <select name="categorie" className={champ}>
-              {Object.entries(CATEGORIE_DOCUMENT).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
-            Fichier
-            <input type="file" name="fichier" className="rounded-lg border border-brume p-2 font-normal" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-graphite">
-            …ou un lien
-            <input name="lien" type="url" placeholder="https://" className={champ} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-graphite sm:col-span-2">
-            Qui le voit
-            <select name="visibilite" className={champ}>
-              {Object.entries(VISIBILITE_DOCUMENT).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <div>
-            <button className="h-11 rounded-lg bg-vert px-5 font-semibold text-white hover:bg-vert-mid">
-              Déposer
-            </button>
-          </div>
-        </form>
-      </section>
+    <>
+      <EntetePage
+        titre="Documents"
+        description="Vos pièces justificatives et vos présentations. Redéposer sous le même titre crée une version, sans rien effacer."
+        action={{ href: `${base}/nouveau`, label: "Déposer un document" }}
+      />
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
-        <h2 className="text-lg font-semibold">Mes documents</h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[46rem] text-sm">
-            <thead className="text-left text-xs tracking-wide text-pierre uppercase">
+      {lignes.length === 0 ? (
+        <Vide
+          texte="Aucun document déposé."
+          action={{ href: `${base}/nouveau`, label: "Déposer le premier" }}
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-vert/10">
+          <table className="w-full min-w-[48rem] text-sm">
+            <thead className="border-b border-vert/10 text-left text-[11px] tracking-wide text-pierre uppercase">
               <tr>
-                <th className="py-2 pr-4">Document</th>
-                <th className="py-2 pr-4">Catégorie</th>
-                <th className="py-2 pr-4">Version</th>
-                <th className="py-2 pr-4">Déposé</th>
-                <th className="py-2">Qui le voit</th>
+                <th className="px-5 py-3">Document</th>
+                <th className="px-5 py-3">Catégorie</th>
+                <th className="px-5 py-3">Version</th>
+                <th className="px-5 py-3">Déposé</th>
+                <th className="px-5 py-3">Qui le voit</th>
               </tr>
             </thead>
             <tbody>
               {lignes.map((d) => (
-                <tr key={d.id} className="border-t border-vert/10">
-                  <td className="py-3 pr-4">
-                    <span className="font-medium">{d.titre}</span>
+                <tr key={d.id} className="border-b border-vert/5 last:border-0 hover:bg-papier/60">
+                  <td className="px-5 py-3.5">
+                    <span className="font-medium text-encre">{d.titre}</span>
                     <span className="block text-xs text-pierre">
                       {d.lien ? (
                         <a href={d.lien} target="_blank" rel="noopener noreferrer" className="text-vert hover:underline">
@@ -168,25 +70,20 @@ export async function DocumentsLaureat({
                       )}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 text-ardoise">{CATEGORIE_DOCUMENT[d.categorie]}</td>
-                  <td className="py-3 pr-4 text-ardoise">v{d.version}</td>
-                  <td className="py-3 pr-4 text-ardoise">
-                    {d.deposeLe.toLocaleDateString("fr-FR")}
+                  <td className="px-5 py-3.5 text-ardoise">{CATEGORIE_DOCUMENT[d.categorie]}</td>
+                  <td className="px-5 py-3.5 text-ardoise tabular-nums">v{d.version}</td>
+                  <td className="px-5 py-3.5 text-ardoise">{d.deposeLe.toLocaleDateString("fr-FR")}</td>
+                  <td className="px-5 py-3.5">
+                    <span className="rounded-full bg-papier px-2.5 py-1 text-xs font-medium text-ardoise">
+                      {VISIBILITE_DOCUMENT[d.visibilite]}
+                    </span>
                   </td>
-                  <td className="py-3 text-ardoise">{VISIBILITE_DOCUMENT[d.visibilite]}</td>
                 </tr>
               ))}
-              {lignes.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-6 text-center text-pierre">
-                    Aucun document déposé.
-                  </td>
-                </tr>
-              ) : null}
             </tbody>
           </table>
         </div>
-      </section>
-    </div>
+      )}
+    </>
   );
 }
