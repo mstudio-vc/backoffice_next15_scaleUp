@@ -57,13 +57,52 @@ jobs:
           fi
 
       - name: Préparer SSH
+        env:
+          CLE: ${{ secrets.VPS_SSH_KEY }}
+          HOTES: ${{ secrets.VPS_KNOWN_HOSTS }}
+          HOTE: ${{ secrets.VPS_HOST }}
+          UTILISATEUR: ${{ secrets.VPS_USER }}
+          CHEMIN: ${{ secrets.VPS_PATH }}
         run: |
           set -eu
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploiement
+
+          # Les secrets sont masqués dans les journaux : une erreur de collage produit sinon un
+          # message incompréhensible (« error in libcrypto », destination rsync absurde). On
+          # contrôle leur FORME ici, où l'on peut encore nommer le coupable.
+          verifier_une_ligne() {
+            if [ "$(printf '%s' "$2" | wc -l)" -ne 0 ]; then
+              echo "Le secret $1 contient plusieurs lignes. Avez-vous collé la clé privée dedans ?" >&2
+              exit 1
+            fi
+            if [ -z "$2" ]; then
+              echo "Le secret $1 est vide." >&2
+              exit 1
+            fi
+          }
+          verifier_une_ligne VPS_HOST "$HOTE"
+          verifier_une_ligne VPS_USER "$UTILISATEUR"
+          verifier_une_ligne VPS_PATH "$CHEMIN"
+
+          case "$CHEMIN" in
+            /*/) : ;;
+            *) echo "VPS_PATH doit être un chemin absolu terminé par une barre oblique (rsync distingue /courant de /courant/)." >&2; exit 1 ;;
+          esac
+
+          # Les retours chariot d'un copier-coller depuis Windows rendent la clé illisible.
+          printf '%s\n' "$CLE" | tr -d '\r' > ~/.ssh/id_deploiement
           chmod 600 ~/.ssh/id_deploiement
-          printf '%s\n' "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+          if ! ssh-keygen -y -f ~/.ssh/id_deploiement >/dev/null 2>&1; then
+            echo "Le secret VPS_SSH_KEY n'est pas une clé privée lisible." >&2
+            echo "Attendu : le contenu de ~/.ssh/app_ivoire_deploy — la clé PRIVÉE, sans .pub," >&2
+            echo "lignes BEGIN/END comprises. Copiez-la avec : pbcopy < ~/.ssh/app_ivoire_deploy" >&2
+            exit 1
+          fi
+
+          printf '%s\n' "$HOTES" | tr -d '\r' > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
+          echo "Secrets conformes."
 
       - name: Envoyer
         run: |
