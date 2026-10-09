@@ -1,0 +1,98 @@
+name: Déploiement
+
+# Comme les autres sites de la maison : la branche `production` fait foi, `main` est le travail
+# en cours. Aucune coordonnée de serveur n'apparaît ici — Cloudflare masque l'IP d'origine, et
+# l'écrire dans un dépôt permettrait de viser le serveur en le contournant.
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+concurrency:
+  group: deploiement-app-ivoire-tech
+  cancel-in-progress: false
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # La même version majeure que le serveur (Node 20) : construire sur une version plus
+          # récente laisserait passer un code que le serveur ne saurait pas exécuter.
+          node-version: 20
+          cache: npm
+
+      - name: Installer
+        run: npm ci
+
+      - name: Contrôler les types
+        run: npm run typecheck
+
+      - name: Construire
+        run: npm run build
+
+      - name: Assembler le paquet
+        run: |
+          set -eu
+          # La sortie autonome n'embarque ni les ressources statiques ni `public/` : Next
+          # attend qu'on les replace à côté du serveur.
+          mkdir -p paquet
+          cp -r .next/standalone/. paquet/
+          mkdir -p paquet/.next
+          cp -r .next/static paquet/.next/static
+          [ -d public ] && cp -r public paquet/public || true
+          cp -r drizzle paquet/drizzle
+          cp deploiement/migrer.sh paquet/migrer.sh
+          chmod +x paquet/migrer.sh
+          # Garde-fou : un paquet qui contiendrait les exports de candidature exposerait les
+          # données personnelles de 155 entreprises. On arrête plutôt que de l'envoyer.
+          if [ -e paquet/data ] || find paquet -name '*.xlsx' -print -quit | grep -q .; then
+            echo "Le paquet contient des données de candidature. Déploiement interrompu." >&2
+            exit 1
+          fi
+
+      - name: Préparer SSH
+        run: |
+          set -eu
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploiement
+          chmod 600 ~/.ssh/id_deploiement
+          printf '%s\n' "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Envoyer
+        run: |
+          set -eu
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_deploiement -o IdentitiesOnly=yes" \
+            --exclude '.well-known' \
+            paquet/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.VPS_PATH }}"
+
+      - name: Migrer puis redémarrer
+        run: |
+          set -eu
+          ssh -i ~/.ssh/id_deploiement -o IdentitiesOnly=yes \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            'set -eu
+             cd "${{ secrets.VPS_PATH }}"
+             set -a; . /etc/app-ivoire-tech.env; set +a
+             sh ./migrer.sh drizzle
+             sudo -n /usr/bin/systemctl restart app-ivoire-tech'
+
+      - name: Vérifier
+        run: |
+          set -eu
+          # On interroge le service en local sur le serveur : à ce stade, le DNS public et le
+          # cache Cloudflare ne doivent pas entrer dans le verdict.
+          ssh -i ~/.ssh/id_deploiement -o IdentitiesOnly=yes \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            'for i in $(seq 1 20); do
+               code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3100/connexion || true)
+               [ "$code" = "200" ] && echo "Service en ligne (HTTP $code)" && exit 0
+               sleep 2
+             done
+             echo "Le service ne répond pas après 40 s." >&2
+             exit 1'

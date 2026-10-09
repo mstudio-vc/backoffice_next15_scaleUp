@@ -1,0 +1,36 @@
+# /etc/systemd/system/app-ivoire-tech.service
+#
+# L'application tourne sous son propre compte, sans privilège, et n'écoute que sur la boucle
+# locale : c'est Apache qui l'expose. Elle ne peut écrire que dans son dossier de stockage.
+#
+# On s'écarte ici du précédent `back-office-qa.yelema.ai`, qui tourne en Docker. Donner l'accès
+# au démon Docker à un compte de déploiement revient à lui donner root — ce qui contredirait le
+# modèle « un compte par site, sans sudo » sur un serveur partagé entre plusieurs clients.
+
+[Unit]
+Description=Back-office Ivoire Tech Next 15 & Scale Up
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=deploy-app
+Group=www-data
+WorkingDirectory=/var/www/app.ivoire.tech/courant
+EnvironmentFile=/etc/app-ivoire-tech.env
+Environment=NODE_ENV=production
+Environment=PORT=3100
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+
+# Cloisonnement : le service ne voit du disque que ce dont il a besoin.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/app.ivoire.tech/stockage
+
+[Install]
+WantedBy=multi-user.target
