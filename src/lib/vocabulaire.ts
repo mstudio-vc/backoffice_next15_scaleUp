@@ -8,7 +8,20 @@ export const TYPE_ORGANISATION = {
   startup: "Startup",
   pme: "PME",
   partenaire: "Partenaire",
-  investisseur: "Investisseur",
+} as const;
+
+/**
+ * Le métier d'un partenaire — ce qu'il fait, pas où il entre. Un fonds n'est pas un rôle à
+ * part : c'est un partenaire dont le métier est l'investissement.
+ */
+export const TYPE_PARTENAIRE = {
+  vc: "Capital-risque",
+  private_equity: "Capital-investissement",
+  banque: "Banque",
+  industrie: "Industrie",
+  institution: "Institution",
+  conseil: "Conseil",
+  autre: "Autre",
 } as const;
 
 export const PROGRAMME = { next15: "Ivoire Tech Next 15", scaleup: "Ivoire Tech Scale Up" } as const;
@@ -55,9 +68,14 @@ export const STATUT_DEMANDE = {
 } as const;
 
 export type TypeOrganisation = keyof typeof TYPE_ORGANISATION;
+export type TypePartenaire = keyof typeof TYPE_PARTENAIRE;
 export type Programme = keyof typeof PROGRAMME;
+export type CategorieOffre = keyof typeof CATEGORIE_OFFRE;
+export type CibleOffre = keyof typeof CIBLE_OFFRE;
+export type StatutDemande = keyof typeof STATUT_DEMANDE;
+export type CategorieDocument = keyof typeof CATEGORIE_DOCUMENT;
 
-/** Le programme d'un lauréat se déduit de son type ; un partenaire ou un investisseur n'en a pas. */
+/** Le programme d'un lauréat se déduit de son type ; un partenaire n'en a pas. */
 export function programmeDe(type: TypeOrganisation): Programme | null {
   if (type === "startup") return "next15";
   if (type === "pme") return "scaleup";

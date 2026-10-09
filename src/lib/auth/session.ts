@@ -16,6 +16,12 @@ export type Session = {
   role: "root" | "membre";
   organisationId: string | null;
   programme: "next15" | "scaleup" | null;
+  /**
+   * Le type de l'organisation rattachée. Il est porté explicitement parce qu'un partenaire se
+   * reconnaît à cela : déduire « partenaire » d'un `programme` nul serait une règle implicite,
+   * donc une règle qu'on finit par oublier.
+   */
+  typeOrganisation: "startup" | "pme" | "partenaire" | null;
 };
 
 /** Ouvre une session et pose le cookie. Le jeton en clair ne quitte pas cette fonction. */
@@ -77,6 +83,7 @@ export async function sessionCourante(): Promise<Session | null> {
     role: row.role,
     organisationId: row.organisationId,
     programme,
+    typeOrganisation: org?.type ?? null,
   };
 }
 

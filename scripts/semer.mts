@@ -18,7 +18,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { offres, organisations, utilisateurs } from "@/db/schema";
 import { ouvrirAcces } from "@/lib/acces";
-import type { TypeOrganisation } from "@/lib/vocabulaire";
+import type { TypeOrganisation, TypePartenaire } from "@/lib/vocabulaire";
 
 if (process.env.NODE_ENV === "production") {
   console.error("Refus : ce jeu d'essai n'a rien à faire en production.");
@@ -28,6 +28,8 @@ if (process.env.NODE_ENV === "production") {
 type Partie = {
   nom: string;
   type: TypeOrganisation;
+  /** Le métier, pour un partenaire. Un fonds n'est plus un type à part : c'est un métier. */
+  metier?: TypePartenaire;
   description: string;
   localisation: string;
   site?: string;
@@ -61,7 +63,8 @@ const PARTIES: Partie[] = [
   },
   {
     nom: "Janngo Capital",
-    type: "investisseur",
+    type: "partenaire",
+    metier: "vc",
     description: "Fonds panafricain, tickets d'amorçage et de série A.",
     localisation: "Abidjan",
     site: "https://janngo.africa",
@@ -69,14 +72,16 @@ const PARTIES: Partie[] = [
   },
   {
     nom: "Partech Africa",
-    type: "investisseur",
+    type: "partenaire",
+    metier: "vc",
     description: "Fonds de capital-risque, de l'amorçage à la croissance.",
     localisation: "Dakar",
     secteurs: ["Fintech", "Logistique"],
   },
   {
     nom: "Saviu Ventures",
-    type: "investisseur",
+    type: "partenaire",
+    metier: "vc",
     description: "Investisseur en amorçage sur l'Afrique francophone.",
     localisation: "Abidjan",
     secteurs: ["Intelligence artificielle", "Mobilité"],
@@ -129,6 +134,7 @@ for (const p of PARTIES) {
   if (deja) continue;
   await db.insert(organisations).values({
     type: p.type,
+    typePartenaire: p.metier ?? null,
     denominationSociale: p.nom,
     description: p.description,
     localisation: p.localisation,
@@ -138,7 +144,7 @@ for (const p of PARTIES) {
   });
   crees += 1;
 }
-console.info(`Partenaires et investisseurs : ${crees} créés, ${PARTIES.length - crees} déjà présents.`);
+console.info(`Partenaires : ${crees} créés, ${PARTIES.length - crees} déjà présents.`);
 
 let offresCreees = 0;
 for (const o of OFFRES) {

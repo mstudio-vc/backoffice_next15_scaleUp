@@ -12,6 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "creer:root": "tsx --conditions=react-server scripts/creer-root.mts",
     "importer:candidatures": "tsx --conditions=react-server scripts/importer-candidatures.mts",
+    "importer:documents": "tsx --conditions=react-server scripts/importer-documents.mts",
     "semer": "tsx --conditions=react-server scripts/semer.mts"
   },
   "dependencies": {

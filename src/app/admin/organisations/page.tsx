@@ -3,7 +3,12 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { journal, organisations } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
-import { STATUT_ORGANISATION, TYPE_ORGANISATION, type TypeOrganisation } from "@/lib/vocabulaire";
+import {
+  STATUT_ORGANISATION,
+  TYPE_ORGANISATION,
+  TYPE_PARTENAIRE,
+  type TypePartenaire,
+} from "@/lib/vocabulaire";
 
 export default async function AdminOrganisations() {
   await exigerRoot();
@@ -15,8 +20,12 @@ export default async function AdminOrganisations() {
     "use server";
     const session = await exigerRoot();
     const nom = String(formData.get("nom") ?? "").trim();
-    const type = formData.get("type") as TypeOrganisation;
-    if (!nom || !["partenaire", "investisseur"].includes(type)) return;
+    // Un lauréat ne se saisit pas à la main : il arrive par l'import des candidatures. Seuls
+    // les partenaires se créent ici — un fonds en fait partie, avec le métier qui va bien.
+    if (!nom) return;
+
+    const metier = formData.get("typePartenaire") as TypePartenaire;
+    if (!(metier in TYPE_PARTENAIRE)) return;
 
     const secteurs = String(formData.get("secteurs") ?? "")
       .split(",")
@@ -26,7 +35,8 @@ export default async function AdminOrganisations() {
     const [o] = await db
       .insert(organisations)
       .values({
-        type,
+        type: "partenaire",
+        typePartenaire: metier,
         denominationSociale: nom,
         description: String(formData.get("description") ?? "").trim() || null,
         localisation: String(formData.get("localisation") ?? "").trim() || null,
@@ -43,7 +53,7 @@ export default async function AdminOrganisations() {
       organisationId: o.id,
       action: "organisation.creee",
       cible: nom,
-      details: { type },
+      details: { type: "partenaire", typePartenaire: metier },
     });
     revalidatePath("/admin/organisations");
   }
@@ -109,10 +119,10 @@ export default async function AdminOrganisations() {
       ) : null}
 
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-lg font-semibold">Ajouter un partenaire ou un investisseur</h2>
+        <h2 className="text-lg font-semibold">Ajouter un partenaire</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Les lauréats, eux, arrivent par l&apos;import des candidatures — on ne les saisit pas
-          à la main.
+          Fonds, banque, industriel ou institution. Les lauréats, eux, arrivent par l&apos;import
+          des candidatures — on ne les saisit pas à la main.
         </p>
         <form action={creer} className="mt-5 grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
@@ -120,10 +130,11 @@ export default async function AdminOrganisations() {
             <input name="nom" required className={champ} />
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-            Type
-            <select name="type" className={champ}>
-              <option value="partenaire">Partenaire</option>
-              <option value="investisseur">Investisseur</option>
+            Métier
+            <select name="typePartenaire" className={champ}>
+              {Object.entries(TYPE_PARTENAIRE).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">

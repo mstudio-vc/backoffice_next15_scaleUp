@@ -29,10 +29,23 @@ export async function exigerProgramme(programme: "next15" | "scaleup"): Promise<
   return s;
 }
 
+/**
+ * L'espace partenaire. Le type est lu sur la session, pas déduit d'un programme nul : un
+ * compte root a lui aussi un programme nul, et la confusion ouvrirait l'espace à qui ne doit
+ * pas y entrer.
+ */
+export async function exigerPartenaire(): Promise<Session> {
+  const s = await exigerSession();
+  if (s.role === "root") redirect("/admin");
+  if (s.typeOrganisation !== "partenaire" || !s.organisationId) redirect("/");
+  return s;
+}
+
 /** Où atterrit un compte donné. Une seule définition, pour que les redirections concordent. */
 export function accueilDe(s: Session): string {
   if (s.role === "root") return "/admin";
   if (s.programme === "next15") return "/startup";
   if (s.programme === "scaleup") return "/entreprise";
+  if (s.typeOrganisation === "partenaire") return "/partenaire";
   return "/connexion";
 }

@@ -22,17 +22,31 @@ export const programme = pgEnum("programme", ["next15", "scaleup"]);
 
 /**
  * Ce qu'est une organisation dans l'annuaire. `startup` et `pme` sont les lauréats — des deux
- * programmes respectivement ; `partenaire` publie des offres, `investisseur` reçoit des mises
- * en relation.
+ * programmes respectivement ; `partenaire` publie des offres.
+ *
+ * Il n'y a PAS de type `investisseur` : un fonds est un partenaire dont le métier est
+ * l'investissement (voir `typePartenaire`). Trois rôles ont été arrêtés — lauréat, ministère,
+ * partenaire — et en faire un quatrième type d'organisation ferait diverger le modèle des
+ * droits réellement accordés.
  *
  * Le programme ne vit plus ici : il se déduit du type (voir `programmeDe`). Le garder en
  * double inviterait la dérive.
  */
-export const typeOrganisation = pgEnum("type_organisation", [
-  "startup",
-  "pme",
-  "partenaire",
-  "investisseur",
+export const typeOrganisation = pgEnum("type_organisation", ["startup", "pme", "partenaire"]);
+
+/**
+ * Le métier d'un partenaire. Nul pour un lauréat — d'où une colonne distincte plutôt qu'un
+ * élargissement de `typeOrganisation` : le type dit QUI entre dans quel espace, celui-ci dit
+ * seulement ce que l'organisation fait.
+ */
+export const typePartenaire = pgEnum("type_partenaire", [
+  "vc",
+  "private_equity",
+  "banque",
+  "industrie",
+  "institution",
+  "conseil",
+  "autre",
 ]);
 
 export const statutOrganisation = pgEnum("statut_organisation", [
@@ -102,6 +116,8 @@ export const organisations = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     type: typeOrganisation("type").notNull(),
+    /** Renseigné pour les partenaires uniquement ; nul pour un lauréat. */
+    typePartenaire: typePartenaire("type_partenaire"),
     denominationSociale: text("denomination_sociale").notNull(),
     nomCommercial: text("nom_commercial"),
     formeJuridique: text("forme_juridique"),

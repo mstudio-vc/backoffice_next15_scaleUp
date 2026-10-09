@@ -2,14 +2,13 @@ import Link from "next/link";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { organisations } from "@/db/schema";
-import { TYPE_ORGANISATION, type TypeOrganisation } from "@/lib/vocabulaire";
+import { TYPE_ORGANISATION, TYPE_PARTENAIRE, type TypeOrganisation } from "@/lib/vocabulaire";
 
 const FILTRES: { cle: string; label: string; types: TypeOrganisation[] }[] = [
-  { cle: "toutes", label: "Toutes", types: ["startup", "pme", "partenaire", "investisseur"] },
+  { cle: "toutes", label: "Toutes", types: ["startup", "pme", "partenaire"] },
   { cle: "startups", label: "Startups", types: ["startup"] },
   { cle: "pme", label: "PME", types: ["pme"] },
   { cle: "partenaires", label: "Partenaires", types: ["partenaire"] },
-  { cle: "investisseurs", label: "Investisseurs", types: ["investisseur"] },
 ];
 
 /**
@@ -74,7 +73,10 @@ export async function Annuaire({
             <div className="min-w-0 grow">
               <h3 className="font-semibold">{o.denominationSociale}</h3>
               <p className="text-sm text-slate-500">
-                {TYPE_ORGANISATION[o.type]}
+                {/* Pour un partenaire, son métier est plus parlant que le mot « partenaire ». */}
+                {o.type === "partenaire" && o.typePartenaire
+                  ? TYPE_PARTENAIRE[o.typePartenaire]
+                  : TYPE_ORGANISATION[o.type]}
                 {o.localisation ? ` · ${o.localisation}` : ""}
                 {o.statut !== "validee" ? ` · ${o.statut === "en_attente" ? "en attente" : "suspendue"}` : ""}
               </p>
