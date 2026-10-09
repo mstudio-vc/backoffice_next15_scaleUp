@@ -56,6 +56,26 @@ doit tourner.
 
 ---
 
+## Les courriels
+
+**Un seul point d'envoi** : `src/lib/courriel/envoi.ts`. Aucun autre module n'appelle Brevo ni
+nodemailer, et tous les modèles vivent dans `modeles.ts`. On y gagne la trace au journal, le
+choix du transport et une mise en forme commune, décidés une fois.
+
+Trois transports, dans cet ordre : **API Brevo** si `BREVO_API_KEY`, **relais SMTP** si
+`SMTP_HOST`, **console** sinon.
+
+L'API passe avant le SMTP à dessein : sur un VPS mutualisé, le port 587 sortant est souvent
+filtré, et un envoi en HTTPS ne s'en soucie pas.
+
+La console n'est pas un pis-aller mais le mode de développement voulu — un lien d'activation ne
+doit pas partir vers une vraie adresse pendant qu'on teste. `GET /api/sante` dit quel transport
+est actif, sans révéler aucune valeur.
+
+> L'expéditeur de `MAIL_FROM` doit être **vérifié dans Brevo**, sinon l'envoi est refusé.
+
+---
+
 ## Les décisions qui structurent le reste
 
 **La candidature est figée, la fiche est vivante.** Deux tables distinctes. `candidatures`

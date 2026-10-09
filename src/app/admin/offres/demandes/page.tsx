@@ -2,7 +2,9 @@ import { revalidatePath } from "next/cache";
 import { desc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db/client";
-import { demandesOffres, journal, offres, organisations } from "@/db/schema";
+import { demandesOffres, journal, offres, organisations, utilisateurs } from "@/db/schema";
+import { envoyer } from "@/lib/courriel/envoi";
+import { reponseDemande } from "@/lib/courriel/modeles";
 import { exigerRoot } from "@/lib/garde";
 import { Retour, Vide } from "@/components/page-entete";
 import { STATUT_DEMANDE } from "@/lib/vocabulaire";
@@ -41,6 +43,31 @@ export default async function Demandes() {
       action: `demande.${statut}`,
       cible: id,
     });
+
+    // Prévenir le lauréat : une demande traitée sans retour oblige à surveiller l'écran.
+    const d = demandes.find((x) => x.id === id);
+    if (d) {
+      const membres = await db
+        .select({ email: utilisateurs.email, nom: utilisateurs.nom })
+        .from(utilisateurs)
+        .innerJoin(demandesOffres, eq(demandesOffres.organisationId, utilisateurs.organisationId))
+        .where(eq(demandesOffres.id, id));
+
+      for (const m of membres) {
+        // Un envoi qui échoue ne doit pas annuler une décision déjà prise ni bloquer les
+        // autres destinataires : on trace et on continue.
+        try {
+          await envoyer(
+            { email: m.email, nom: m.nom },
+            reponseDemande(d.demandeur, d.offre, d.partenaire, statut === "acceptee"),
+            { utilisateurId: session.utilisateurId },
+          );
+        } catch (e) {
+          console.error("[demandes] notification impossible", e);
+        }
+      }
+    }
+
     revalidatePath("/admin/offres/demandes");
   }
 

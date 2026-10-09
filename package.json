@@ -17,6 +17,7 @@
     "verrou": "sh scripts/verrou.sh"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^6.0.3",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.0",
     "nodemailer": "^10.0.16",

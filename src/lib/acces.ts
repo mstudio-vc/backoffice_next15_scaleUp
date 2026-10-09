@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { accesInvitations, journal, utilisateurs } from "@/db/schema";
 import { genererJeton, VALIDITE_INVITATION_HEURES } from "@/lib/auth/jeton";
-import { courrielInvitation, envoyerCourriel } from "@/lib/mail";
+import { envoyer } from "@/lib/courriel/envoi";
+import { invitation } from "@/lib/courriel/modeles";
 
 /**
  * Ouvre un accès : génère un lien à usage unique et l'envoie par courriel.
@@ -34,19 +35,18 @@ export async function ouvrirAcces(utilisateurId: string, creeParId: string | nul
   });
 
   const base = process.env.APP_URL ?? "http://localhost:3000";
-  await envoyerCourriel({
-    a: u.email,
-    sujet: "Votre accès à la plateforme Ivoire Tech",
-    texte: courrielInvitation(
-      u.nom,
-      `${base}/definir-mot-de-passe/${jeton}`,
-      VALIDITE_INVITATION_HEURES,
-    ),
-  });
 
   await db.insert(journal).values({
     utilisateurId: creeParId,
     action: "acces.ouvert",
     cible: u.email,
   });
+
+  // L'invitation est enregistrée AVANT l'envoi : si le courriel échoue, l'accès existe et un
+  // « Renvoyer le lien » suffit. L'inverse perdrait l'invitation à chaque incident du relais.
+  await envoyer(
+    { email: u.email, nom: u.nom },
+    invitation(u.nom, `${base}/definir-mot-de-passe/${jeton}`, VALIDITE_INVITATION_HEURES),
+    { utilisateurId: creeParId },
+  );
 }
