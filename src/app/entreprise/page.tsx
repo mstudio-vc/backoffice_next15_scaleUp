@@ -3,5 +3,5 @@ import { exigerProgramme } from "@/lib/garde";
 
 export default async function EntrepriseAccueil() {
   const s = await exigerProgramme("scaleup");
-  return <TableauLaureat organisationId={s.organisationId!} />;
+  return <TableauLaureat organisationId={s.organisationId!} base="/entreprise" />;
 }

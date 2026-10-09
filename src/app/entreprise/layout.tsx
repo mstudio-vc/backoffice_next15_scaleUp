@@ -16,6 +16,7 @@ export default async function EntrepriseLayout({ children }: { children: React.R
       identite={s.nom ?? s.email}
       nav={[
         { href: "/entreprise", label: "Tableau de bord" },
+        { href: "/entreprise/fiche", label: "Ma fiche" },
         { href: "/entreprise/documents", label: "Documents" },
         { href: "/entreprise/offres", label: "Offres" },
         { href: "/entreprise/annuaire", label: "Annuaire" },

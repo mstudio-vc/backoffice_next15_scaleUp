@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { candidatures, organisations } from "@/db/schema";
@@ -9,7 +10,14 @@ import { candidatures, organisations } from "@/db/schema";
  * figée : on n'en montre ici que la date et le volume, pour que la distinction soit visible
  * dès le premier écran.
  */
-export async function TableauLaureat({ organisationId }: { organisationId: string }) {
+export async function TableauLaureat({
+  organisationId,
+  base,
+}: {
+  organisationId: string;
+  /** Préfixe de l'espace, pour renvoyer vers SA fiche et non celle de l'autre espace. */
+  base: string;
+}) {
   const org = await db.query.organisations.findFirst({
     where: eq(organisations.id, organisationId),
   });
@@ -62,7 +70,11 @@ export async function TableauLaureat({ organisationId }: { organisationId: strin
             · {nbChamps} réponses conservées.
             <span className="mt-2 block text-slate-500">
               Elle est conservée telle que vous l&apos;avez signée et ne change plus. Les
-              corrections se font sur votre fiche ci-dessus.
+              corrections se font sur{" "}
+              <Link href={`${base}/fiche`} className="font-medium text-indigo-700 hover:underline">
+                votre fiche
+              </Link>
+              .
             </span>
           </p>
         ) : (

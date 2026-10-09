@@ -83,11 +83,15 @@ le schéma TypeScript ne sert qu'à le produire.
 
 ## Ce qui n'est pas encore là
 
-Le socle, l'authentification et l'import sont en place. Restent à construire : le dépôt et
-la consultation des **documents** (une quinzaine de pièces par candidature, dont des pièces
-d'identité et des états financiers — à traiter comme des données sensibles), les **offres**,
-l'**annuaire**, la **validation des comptes** par l'administration, et le **journal
-d'activité** (la table existe, rien ne l'écrit encore hors ouverture d'accès).
+Le socle, l'authentification, l'import, les **documents**, les **offres**, l'**annuaire**, la
+**validation des comptes** et le **journal d'activité** sont en place.
+
+Reste à construire : la **reprise des pièces jointes des candidatures**. Les exports Jotform ne
+contiennent que des URL vers `jotform.com`, et ces URL exigent une authentification au compte
+qui détient les formulaires — un `fetch` anonyme reçoit une page HTML, pas le fichier. Tant que
+les fichiers n'ont pas été récupérés par l'API Jotform ou par un export groupé, la table
+`documents` reste vide pour les lauréats importés : une quinzaine de pièces par candidature,
+dont des pièces d'identité et des états financiers, à traiter comme des données sensibles.
 
 Deux rôles de la maquette V1 — **partenaire** et **investisseur** — n'ont pas d'espace : la
 demande portait sur trois. Si la mise en relation et la publication d'offres entrent dans le
