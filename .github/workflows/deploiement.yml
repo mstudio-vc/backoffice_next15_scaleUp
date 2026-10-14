@@ -33,6 +33,9 @@ jobs:
       - name: Contrôler les types
         run: npm run typecheck
 
+      - name: Cliquet d'interface
+        run: npm run cliquet
+
       - name: Construire
         run: npm run build
 

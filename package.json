@@ -17,7 +17,8 @@
     "completer:fiches": "tsx --conditions=react-server scripts/completer-fiches.mts",
     "semer": "tsx --conditions=react-server scripts/semer.mts",
     "verrou": "sh scripts/verrou.sh",
-    "preparer:classeur": "tsx --conditions=react-server scripts/preparer-classeur.mts"
+    "preparer:classeur": "tsx --conditions=react-server scripts/preparer-classeur.mts",
+    "cliquet": "tsx scripts/cliquet-ui.mts"
   },
   "dependencies": {
     "@getbrevo/brevo": "^6.0.3",
