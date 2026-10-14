@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Exports de candidature : données personnelles de lauréats, jamais versionnées.
 /data/
+
+# Scripts jetables de démonstration : ils portent des mots de passe en clair.
+scripts/_*.mts
