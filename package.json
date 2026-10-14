@@ -16,7 +16,8 @@
     "importer:documents": "tsx --conditions=react-server scripts/importer-documents.mts",
     "completer:fiches": "tsx --conditions=react-server scripts/completer-fiches.mts",
     "semer": "tsx --conditions=react-server scripts/semer.mts",
-    "verrou": "sh scripts/verrou.sh"
+    "verrou": "sh scripts/verrou.sh",
+    "preparer:classeur": "tsx --conditions=react-server scripts/preparer-classeur.mts"
   },
   "dependencies": {
     "@getbrevo/brevo": "^6.0.3",
