@@ -130,8 +130,13 @@ les fichiers n'ont pas été récupérés par l'API Jotform ou par un export gro
 `documents` reste vide pour les lauréats importés : une quinzaine de pièces par candidature,
 dont des pièces d'identité et des états financiers, à traiter comme des données sensibles.
 
-Deux rôles de la maquette V1 — **partenaire** et **investisseur** — n'ont pas d'espace : la
-demande portait sur trois. Si la mise en relation et la publication d'offres entrent dans le
-périmètre, il faudra les ajouter, et le modèle de données devra s'étendre.
+L'espace **partenaire** existe désormais : profil avec métier, publication d'offres, suivi des
+demandes, annuaire. Les trois rôles arrêtés sont lauréat, ministère et partenaire —
+l'investisseur n'en est plus un : c'est un partenaire dont le métier est l'investissement
+(`type_partenaire`).
+
+Reste en suspens : la table `misesEnRelation`, modélisée mais lue nulle part. Elle reliait un
+lauréat à un *investisseur*, rôle qui n'existe plus. À reprendre sur les partenaires, ou à
+retirer — mais la laisser dormir donne à croire que la fonction existe.
 
 Le cadrage détaillé vit dans `~/myspace/Mstudio/backofficeNext15_SCALEUP`.
