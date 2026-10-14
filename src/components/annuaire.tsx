@@ -92,14 +92,25 @@ export async function Annuaire({
   const effectif = (types: TypeOrganisation[]) =>
     parType.filter((p) => types.includes(p.type)).reduce((s, p) => s + p.n, 0);
 
-  const lien = (p: Record<string, string | undefined>) => {
+  const lien = (p: Record<string, string | undefined>, ancre?: string) => {
     const u = new URLSearchParams();
     if (p.filtre && p.filtre !== "toutes") u.set("filtre", p.filtre);
     if (p.q) u.set("q", p.q);
     if (p.n) u.set("n", p.n);
     const s = u.toString();
-    return s ? `${base}?${s}` : base;
+    return `${s ? `${base}?${s}` : base}${ancre ? `#${ancre}` : ""}`;
   };
+
+  /**
+   * « Afficher plus » ramenait l'écran en haut : c'est une navigation, et le navigateur
+   * repositionne. L'ancre est posée sur la PREMIÈRE CARTE DU NOUVEAU LOT, et le lien y mène —
+   * on reprend donc la lecture là où elle s'est arrêtée.
+   *
+   * Pourquoi une ancre et non `scroll={false}` : celui-ci est un comportement du routeur, donc
+   * sans effet quand le JavaScript n'est pas là. Toute cette application fonctionne sans, et
+   * ce n'est pas la pagination de l'annuaire qui va introduire l'exception.
+   */
+  const indexAncre = Math.max(limite - PAR_LOT, 0);
 
   return (
     <div className="flex flex-col gap-3">
@@ -156,8 +167,8 @@ export async function Annuaire({
           {/* `auto-rows-fr` : toutes les cartes d'une rangée ont la même hauteur. Sans cela,
               une description de 3000 signes déformait la rangée entière. */}
           <ul className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {lignes.map((o) => (
-              <li key={o.id}>
+            {lignes.map((o, i) => (
+              <li key={o.id} id={i === indexAncre ? "suite" : undefined}>
                 <Link
                   href={`${base}/${o.id}`}
                   className="flex h-full flex-col rounded bg-white p-3 ring-1 ring-brume hover:ring-vert"
@@ -206,7 +217,7 @@ export async function Annuaire({
           {total.n > lignes.length ? (
             <div className="text-center">
               <Link
-                href={lien({ filtre: choisi.cle, q: recherche, n: String(limite + PAR_LOT) })}
+                href={lien({ filtre: choisi.cle, q: recherche, n: String(limite + PAR_LOT) }, "suite")}
                 className="inline-flex h-8 items-center rounded border border-brume bg-white px-4 text-base text-vert hover:bg-papier"
               >
                 Afficher plus ({total.n - lignes.length} restantes)
