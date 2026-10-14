@@ -14,6 +14,7 @@
     "creer:root": "tsx --conditions=react-server scripts/creer-root.mts",
     "importer:candidatures": "tsx --conditions=react-server scripts/importer-candidatures.mts",
     "importer:documents": "tsx --conditions=react-server scripts/importer-documents.mts",
+    "completer:fiches": "tsx --conditions=react-server scripts/completer-fiches.mts",
     "semer": "tsx --conditions=react-server scripts/semer.mts",
     "verrou": "sh scripts/verrou.sh"
   },

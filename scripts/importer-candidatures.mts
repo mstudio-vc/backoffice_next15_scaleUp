@@ -23,6 +23,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { candidatures, organisations } from "@/db/schema";
 import { typeDuProgramme } from "@/lib/vocabulaire";
+import { COLONNE_SECTEURS, REPLIS, premier, secteursDe } from "./fiche-jotform.mjs";
 
 type Programme = "next15" | "scaleup";
 
@@ -38,13 +39,12 @@ const FICHE = {
   formeJuridique: "Forme juridique",
   rccm: "Numéro RCCM",
   ncc: "Numéro de compte contribuable (NCC)",
-  siegeSocial: "Localisation du siège social",
   adresseSiege: "Adresse complète du siège (commune, ville, région)",
-  telephone: "Téléphone de l'entreprise",
   emailOfficiel: "Adresse e-mail officielle",
   siteInternet: "Site internet",
   linkedin: "Page LinkedIn de l'entreprise",
 } as const;
+
 
 function texte(v: unknown): string | null {
   if (v === null || v === undefined) return null;
@@ -110,12 +110,14 @@ async function importer(chemin: string): Promise<{ programme: Programme; lus: nu
           formeJuridique: ligne[FICHE.formeJuridique],
           rccm: ligne[FICHE.rccm],
           ncc: ligne[FICHE.ncc],
-          siegeSocial: ligne[FICHE.siegeSocial],
+          siegeSocial: premier(ligne, REPLIS.siegeSocial),
           adresseSiege: ligne[FICHE.adresseSiege],
-          telephone: ligne[FICHE.telephone],
+          telephone: premier(ligne, REPLIS.telephone),
           emailOfficiel: ligne[FICHE.emailOfficiel],
           siteInternet: ligne[FICHE.siteInternet],
           linkedin: ligne[FICHE.linkedin],
+          description: premier(ligne, REPLIS.description),
+          secteurs: secteursDe(ligne[COLONNE_SECTEURS]),
         })
         .returning({ id: organisations.id });
 
