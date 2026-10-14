@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
-import { desc, eq } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
-import { journal, organisations } from "@/db/schema";
+import { organisations } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
 import { Badge } from "@/components/badge";
-import { BOUTON_CLAIR, BOUTON_DANGER } from "@/components/champ";
 import { CarteTable, EntetePage, TD, TH, TR, Vide } from "@/components/page-entete";
 import {
   STATUT_ORGANISATION,
@@ -19,6 +17,9 @@ import {
  * L'écran affichait les organisations à valider DEUX fois : dans un encart en haut, puis dans
  * la grille. Le même objet montré deux fois se lit comme deux objets, et l'encart poussait la
  * grille sous la ligne de flottaison. Une vue filtre la liste, elle ne la duplique pas.
+ *
+ * Aucune écriture ne part d'ici. La liste mène à la fiche, la fiche mène à la confirmation,
+ * et c'est la confirmation qui écrit (règles 5 et 8).
  */
 const VUES = [
   { cle: "a-traiter", label: "À traiter" },
@@ -38,25 +39,6 @@ export default async function AdminOrganisations({
   const enAttente = toutes.filter((o) => o.statut === "en_attente");
   const lignes = active.cle === "a-traiter" ? enAttente : toutes;
 
-  async function changerStatut(formData: FormData) {
-    "use server";
-    const session = await exigerRoot();
-    const id = String(formData.get("organisationId"));
-    const statut = formData.get("statut") as "validee" | "suspendue" | "en_attente";
-    if (!["validee", "suspendue", "en_attente"].includes(statut)) return;
-
-    await db
-      .update(organisations)
-      .set({ statut, misAJourLe: new Date() })
-      .where(eq(organisations.id, id));
-    await db.insert(journal).values({
-      utilisateurId: session.utilisateurId,
-      organisationId: id,
-      action: `organisation.${statut}`,
-    });
-    revalidatePath("/admin/organisations");
-  }
-
   return (
     <>
       <EntetePage
@@ -72,7 +54,7 @@ export default async function AdminOrganisations({
             href={`/admin/organisations?vue=${v.cle}`}
             className={`rounded px-2.5 py-1 text-base ${
               v.cle === active.cle
-                ? "bg-vert font-normal text-white"
+                ? "bg-vert font-bold text-white"
                 : "text-ardoise hover:bg-papier"
             }`}
           >
@@ -103,14 +85,20 @@ export default async function AdminOrganisations({
               <th className={TH}>Organisation</th>
               <th className={TH}>Type</th>
               <th className={TH}>État</th>
-              <th className={`${TH} text-right`}>Action</th>
+              <th className={`${TH} text-right`}>Fiche</th>
             </tr>
           </thead>
           <tbody>
             {lignes.map((o) => (
               <tr key={o.id} className={TR}>
                 <td className={TD}>
-                  <span className="font-normal text-encre">{o.denominationSociale}</span>
+                  {/* La ligne ouvre la fiche. On lit, puis on agit (règle 8). */}
+                  <Link
+                    href={`/admin/organisations/${o.id}`}
+                    className="font-bold text-vert hover:underline"
+                  >
+                    {o.denominationSociale}
+                  </Link>
                   {o.localisation ? (
                     <span className="block text-sm text-pierre">{o.localisation}</span>
                   ) : null}
@@ -122,27 +110,12 @@ export default async function AdminOrganisations({
                   </Badge>
                 </td>
                 <td className={`${TD} text-right`}>
-                  <form action={changerStatut} className="inline-flex gap-1.5">
-                    <input type="hidden" name="organisationId" value={o.id} />
-                    {o.statut === "en_attente" ? (
-                      <>
-                        <button name="statut" value="validee" className={BOUTON_CLAIR}>
-                          Valider
-                        </button>
-                        <button name="statut" value="suspendue" className={BOUTON_DANGER}>
-                          Refuser
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        name="statut"
-                        value={o.statut === "suspendue" ? "validee" : "suspendue"}
-                        className={o.statut === "suspendue" ? BOUTON_CLAIR : BOUTON_DANGER}
-                      >
-                        {o.statut === "suspendue" ? "Réactiver" : "Suspendre"}
-                      </button>
-                    )}
-                  </form>
+                  <Link
+                    href={`/admin/organisations/${o.id}`}
+                    className="text-base text-vert hover:underline"
+                  >
+                    Ouvrir →
+                  </Link>
                 </td>
               </tr>
             ))}

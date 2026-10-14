@@ -79,6 +79,11 @@ const TEXTE = />\s*([^<>{}\n][^<>{}]{25,})\s*</g;
 const TOKENS_DE_CODE = ["=>", ";", "//", "(", ")", "=", "&&", "??", "||", "[", "]"];
 
 /**
+ * Il ne mesure QUE le texte écrit dans le JSX. Une phrase construite en JavaScript — les
+ * conséquences calculées d'une confirmation, par exemple — lui échappe : c'est une limite
+ * connue, pas une tolérance. Compter tous les littéraux de chaîne noierait la mesure sous les
+ * noms de classes.
+ *
  * Les entités d'abord : `n&apos;apparaissent` contient un point-virgule, et une phrase
  * française sur deux porte une apostrophe. Sans ce décodage, le cliquet ne voyait presque
  * aucune prose et annonçait une dette deux fois plus faible qu'elle n'était.
