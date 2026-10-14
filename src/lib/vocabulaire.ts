@@ -32,6 +32,39 @@ export const STATUT_ORGANISATION = {
   suspendue: "Suspendue",
 } as const;
 
+/**
+ * Le statut d'un compte. « Lien envoyé, mot de passe à définir » tenait lieu de libellé : une
+ * phrase dans un badge, là où un badge doit se lire d'un coup d'œil (SLDS §7.5).
+ */
+export const STATUT_UTILISATEUR = {
+  invite: "À activer",
+  actif: "Actif",
+  suspendu: "Suspendu",
+} as const;
+
+export const TON_STATUT_UTILISATEUR = {
+  invite: "attente",
+  actif: "succes",
+  suspendu: "inactif",
+} as const;
+
+/**
+ * Le ton du badge de chaque statut. Il vit à côté du libellé, pas dans l'écran : un statut
+ * doit se lire de la même façon partout, et renommer ou reteinter doit coûter une ligne
+ * (règle 13 : un concept, un nom).
+ */
+export const TON_STATUT_ORGANISATION = {
+  en_attente: "attente",
+  validee: "succes",
+  suspendue: "inactif",
+} as const;
+
+export const TON_STATUT_DEMANDE = {
+  envoyee: "attente",
+  acceptee: "succes",
+  refusee: "erreur",
+} as const;
+
 export const CATEGORIE_OFFRE = {
   cloud_infrastructure: "Cloud et infrastructure",
   juridique: "Juridique",

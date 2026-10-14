@@ -27,6 +27,19 @@
 }
 
 @theme inline {
+  /* Échelle de texte d'une application de gestion, pas d'une page d'accueil : corps 13 px,
+     petit 12, micro 11 (SLDS §7.1). L'utilisateur passe sa journée dans l'outil ; une
+     typographie de brochure l'oblige à défiler pour lire une liste de trente lignes.
+
+     Les noms de Tailwind sont conservés et REDÉFINIS : `text-base` vaut 13 px partout. Sans
+     cela, chaque écran écrirait `text-[13px]` et le premier oubli ramènerait du 16 px. */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+
   --color-vert: var(--vert);
   --color-vert-mid: var(--vert-mid);
   --color-vert-sombre: var(--vert-sombre);
@@ -47,6 +60,8 @@
   body {
     background-color: var(--creme);
     color: var(--encre);
+    font-size: 13px;
+    line-height: 1.5;
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
