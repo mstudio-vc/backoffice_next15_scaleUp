@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { accesInvitations, utilisateurs } from "@/db/schema";
 import { empreinteJeton } from "@/lib/auth/jeton";
@@ -17,7 +17,8 @@ export default async function DefinirMotDePasse({
   const { erreur } = await searchParams;
 
   // Invitation valide = jamais utilisée ET non expirée. Les deux conditions sont en SQL pour
-  // qu'aucun appelant ne puisse en oublier une.
+  // qu'aucun appelant ne puisse en oublier une — `now()` plutôt qu'une heure calculée ici,
+  // pour la même raison que dans la lecture de session.
   const [invitation] = await db
     .select({ id: accesInvitations.id, utilisateurId: accesInvitations.utilisateurId })
     .from(accesInvitations)
@@ -25,7 +26,7 @@ export default async function DefinirMotDePasse({
       and(
         eq(accesInvitations.jetonHash, empreinteJeton(jeton)),
         isNull(accesInvitations.utiliseLe),
-        gt(accesInvitations.expireLe, new Date()),
+        gt(accesInvitations.expireLe, sql`now()`),
       ),
     )
     .limit(1);

@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { sessions, utilisateurs } from "@/db/schema";
 import { programmeDe } from "@/lib/vocabulaire";
@@ -45,6 +45,10 @@ export async function ouvrirSession(utilisateurId: string): Promise<void> {
  *
  * L'expiration est filtrée EN SQL (`expire_le > now()`) : une session expirée ne doit jamais
  * remonter jusqu'au code applicatif, où l'on risquerait d'oublier de la vérifier.
+ *
+ * L'heure vient de `now()`, pas d'un `new Date()` côté application. Deux raisons : le rendu ne
+ * doit lire aucune valeur instable — `cacheComponents` le refuse — et c'est la base qui fait
+ * foi sur l'heure, ce qui supprime tout décalage d'horloge entre elle et le serveur.
  */
 export async function sessionCourante(): Promise<Session | null> {
   const jeton = (await cookies()).get(COOKIE)?.value;
@@ -61,7 +65,7 @@ export async function sessionCourante(): Promise<Session | null> {
     })
     .from(sessions)
     .innerJoin(utilisateurs, eq(utilisateurs.id, sessions.utilisateurId))
-    .where(and(eq(sessions.jetonHash, empreinteJeton(jeton)), gt(sessions.expireLe, new Date())))
+    .where(and(eq(sessions.jetonHash, empreinteJeton(jeton)), gt(sessions.expireLe, sql`now()`)))
     .limit(1);
 
   // Un compte suspendu garde son cookie mais perd sa session : la révocation est immédiate,

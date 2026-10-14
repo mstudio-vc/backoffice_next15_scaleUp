@@ -6,6 +6,11 @@ import { verifierMotDePasse } from "@/lib/auth/password";
 import { ouvrirSession, sessionCourante } from "@/lib/auth/session";
 import { accueilDe } from "@/lib/garde";
 
+// La page lit `searchParams` (le message d'erreur après un échec de connexion) et consulte la
+// session : rien n'est prérendrable. Avec `cacheComponents`, c'est `instant = false` qui déclare
+// une route bloquante — même convention que les layouts d'espaces.
+export const instant = false;
+
 export default async function Connexion({
   searchParams,
 }: {
