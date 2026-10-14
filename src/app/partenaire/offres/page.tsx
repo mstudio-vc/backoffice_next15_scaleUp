@@ -6,6 +6,7 @@ import { exigerPartenaire } from "@/lib/garde";
 import { EntetePage, Vide } from "@/components/page-entete";
 import { CATEGORIE_OFFRE, CIBLE_OFFRE } from "@/lib/vocabulaire";
 import { Pilule } from "@/components/badge";
+import { Vignette } from "@/components/couverture";
 
 /** Les offres du partenaire connecté. La publication vit sur sa propre route. */
 export default async function PartenaireOffres() {
@@ -54,8 +55,9 @@ export default async function PartenaireOffres() {
         {lignes.map((o) => (
           <article
             key={o.id}
-            className="flex flex-wrap items-start gap-4 rounded bg-white p-5 ring-1 ring-brume"
+            className="flex flex-wrap items-start gap-3 rounded bg-white p-4 ring-1 ring-brume"
           >
+            <Vignette url={o.couvertureUrl} />
             <div className="min-w-0 grow">
               <div className="flex flex-wrap items-center gap-2 text-xs font-normal">
                 <Pilule>

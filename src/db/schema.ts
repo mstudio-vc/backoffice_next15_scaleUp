@@ -323,6 +323,12 @@ export const offres = pgTable(
     categorie: categorieOffre("categorie").notNull().default("autre"),
     cible: cibleOffre("cible").notNull().default("toutes"),
     valideJusquAu: date("valide_jusqu_au"),
+    /**
+     * L'image de couverture, facultative. On conserve l'URL rendue par l'hébergeur d'images,
+     * pas le fichier : le serveur de l'application n'a pas à servir des visuels, ni à les
+     * sauvegarder, ni à les redimensionner.
+     */
+    couvertureUrl: text("couverture_url"),
     statut: statutOffre("statut").notNull().default("publiee"),
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
     misAJourLe: timestamp("mis_a_jour_le", { withTimezone: true }).notNull().defaultNow(),

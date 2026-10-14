@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
     "*": ["./data/**", "./scripts/**", "./deploiement/**", "./drizzle/meta/**"],
   },
 
+  images: {
+    // `next/image` refuse par défaut les hôtes externes, et c'est tant mieux : la liste est
+    // une frontière. Seul l'hébergeur des couvertures d'offres y figure.
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" }],
+  },
+
   experimental: {
     // L'écran d'import envoie le classeur par une action de serveur, dont le corps est
     // limité à 1 Mo par défaut. Les exports connus pèsent 180 et 340 Ko ; on laisse de la

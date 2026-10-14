@@ -15,6 +15,13 @@
       "when": 1791558195679,
       "tag": "0001_partenaires",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792001378593,
+      "tag": "0002_couverture_offre",
+      "breakpoints": true
     }
   ]
 }

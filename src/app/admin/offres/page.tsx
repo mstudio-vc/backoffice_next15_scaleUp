@@ -7,6 +7,7 @@ import { exigerRoot } from "@/lib/garde";
 import { EntetePage, Vide } from "@/components/page-entete";
 import { CATEGORIE_OFFRE, CIBLE_OFFRE } from "@/lib/vocabulaire";
 import { Badge, Pilule } from "@/components/badge";
+import { Couverture } from "@/components/couverture";
 
 export default async function AdminOffres() {
   await exigerRoot();
@@ -73,9 +74,10 @@ export default async function AdminOffres() {
           {lignes.map(({ offre, partenaire, demandes }) => (
             <article
               key={offre.id}
-              className="flex flex-col rounded bg-white p-5 ring-1 ring-brume"
+              className="flex flex-col overflow-hidden rounded bg-white p-4 ring-1 ring-brume"
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs font-normal">
+              <Couverture url={offre.couvertureUrl} cadre="-mx-4 -mt-4 mb-3" />
+              <div className="flex flex-wrap items-center gap-2">
                 <Pilule>
                   {CATEGORIE_OFFRE[offre.categorie]}
                 </Pilule>

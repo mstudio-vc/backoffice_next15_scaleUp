@@ -1,0 +1,1 @@
+ALTER TABLE "offres" ADD COLUMN "couverture_url" text;

@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { demandesOffres, journal, offres, organisations } from "@/db/schema";
 import { exigerSession } from "@/lib/garde";
 import { Pilule } from "@/components/badge";
+import { Couverture } from "@/components/couverture";
 import {
   CATEGORIE_OFFRE,
   CIBLE_OFFRE,
@@ -93,8 +94,9 @@ export async function OffresLaureat({
     <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold">Offres des partenaires</h1>
       {lignes.map(({ offre, partenaire, demandeStatut }) => (
-        <article key={offre.id} className="rounded bg-white p-5 ring-1 ring-brume">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-normal">
+        <article key={offre.id} className="overflow-hidden rounded bg-white p-4 ring-1 ring-brume">
+          <Couverture url={offre.couvertureUrl} cadre="-mx-4 -mt-4 mb-3" />
+          <div className="flex flex-wrap items-center gap-2">
             <Pilule>
               {CATEGORIE_OFFRE[offre.categorie]}
             </Pilule>

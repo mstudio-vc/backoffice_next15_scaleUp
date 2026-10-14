@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { transportCourriel } from "@/lib/courriel/envoi";
+import { hebergeurImages } from "@/lib/images";
 
 /**
  * Contrôle de santé du déploiement.
@@ -28,6 +29,9 @@ export async function GET() {
       // « console » signifie qu'aucun courriel ne part : les liens d'accès restent dans le
       // journal du service. Acceptable en développement, jamais en production.
       courriel,
+      // « absent » n'est pas une panne : le champ de couverture n'est alors pas proposé. On
+      // l'expose pour qu'un « je ne vois pas le champ image » se diagnostique en une requête.
+      images: hebergeurImages(),
       manquant: requis,
     },
     { status: ok ? 200 : 503, headers: { "cache-control": "no-store" } },
