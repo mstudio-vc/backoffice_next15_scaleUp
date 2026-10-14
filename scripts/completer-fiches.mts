@@ -25,7 +25,7 @@ import {
   premier,
   secteursDe,
   type LigneCandidature,
-} from "./fiche-jotform.mjs";
+} from "@/lib/jotform";
 
 const ecrire = process.argv.includes("--ecrire");
 
