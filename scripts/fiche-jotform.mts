@@ -28,10 +28,13 @@ export const REPLIS = {
     "Téléphone direct du représentant légal",
     "Téléphone",
   ],
-  siegeSocial: [
-    "Localisation du siège social",
-    "Adresse complète du siège (commune, ville, région)",
-  ],
+  /**
+   * La région déclarée — « District d'Abidjan », « Autre région de Côte d'Ivoire ». Seuls 13
+   * lauréats l'ont renseignée, et c'est ainsi : y recopier l'adresse complète ferait un doublon
+   * de `adresseSiege` sous un intitulé qui promet autre chose. Le lauréat complétera.
+   */
+  siegeSocial: ["Localisation du siège social"],
+  localisation: ["Localisation du siège social"],
 } as const;
 
 export const COLONNE_SECTEURS =

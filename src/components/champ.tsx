@@ -16,19 +16,22 @@ export function Champ({
   return (
     <label htmlFor={id} className="flex flex-col gap-1.5">
       <span className="text-[13px] font-semibold text-graphite">{label}</span>
-      <input
-        id={id}
-        className={
-          "h-11 rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none transition " +
-          "placeholder:text-pierre focus:border-vert focus:ring-4 focus:ring-vert/10 " +
-          (className ?? "")
-        }
-        {...props}
-      />
+      <input id={id} className={"h-11 " + SAISIE + " " + (className ?? "")} {...props} />
       {aide ? <span className="text-xs text-pierre">{aide}</span> : null}
     </label>
   );
 }
+
+/**
+ * L'apparence d'une zone de saisie, sans la hauteur.
+ *
+ * Pour les formulaires qui ne peuvent pas passer par <Champ> : ceux qui posent eux-mêmes leur
+ * mise en grille, et ceux dont le contrôle n'est pas un <input> — un <textarea> n'a pas de
+ * hauteur fixe. Sans ce partage, chaque écran recopie la bordure et le focus, et ils divergent.
+ */
+export const SAISIE =
+  "rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none transition " +
+  "placeholder:text-pierre focus:border-vert focus:ring-4 focus:ring-vert/10";
 
 /** Bouton principal : le vert du Ministère, jamais une autre couleur. */
 export const BOUTON =

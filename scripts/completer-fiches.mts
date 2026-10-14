@@ -36,13 +36,14 @@ const lignes = await db
     description: organisations.description,
     telephone: organisations.telephone,
     siegeSocial: organisations.siegeSocial,
+    localisation: organisations.localisation,
     secteurs: organisations.secteurs,
     donnees: candidatures.donnees,
   })
   .from(candidatures)
   .innerJoin(organisations, eq(organisations.id, candidatures.organisationId));
 
-const compte = { description: 0, telephone: 0, siegeSocial: 0, secteurs: 0 };
+const compte = { description: 0, telephone: 0, siegeSocial: 0, localisation: 0, secteurs: 0 };
 let touchees = 0;
 
 for (const l of lignes) {
@@ -70,6 +71,13 @@ for (const l of lignes) {
       compte.siegeSocial += 1;
     }
   }
+  if (!l.localisation?.trim()) {
+    const v = premier(d, REPLIS.localisation);
+    if (v) {
+      maj.localisation = v;
+      compte.localisation += 1;
+    }
+  }
   if ((l.secteurs ?? []).length === 0) {
     const v = secteursDe(d[COLONNE_SECTEURS] ?? null);
     if (v.length > 0) {
@@ -89,6 +97,7 @@ console.info(`${lignes.length} fiches examinées, ${touchees} à compléter.`);
 console.info(`  description : ${compte.description}`);
 console.info(`  téléphone   : ${compte.telephone}`);
 console.info(`  siège       : ${compte.siegeSocial}`);
+console.info(`  localisation: ${compte.localisation}`);
 console.info(`  secteurs    : ${compte.secteurs}`);
 console.info(ecrire ? "\nÉcrit." : "\nEssai à blanc — relancer avec --ecrire pour appliquer.");
 
