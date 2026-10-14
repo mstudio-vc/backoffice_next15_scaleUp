@@ -8,7 +8,6 @@ export default async function StartupLayout({ children }: { children: React.Reac
     <EspaceLayout
       programme={"next15"}
       sousTitre={"Espace startup"}
-      teinte={"bg-feuille/15 text-vert"}
       identite={s.nom ?? s.email}
       role="Lauréat"
       nav={[

@@ -8,7 +8,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <EspaceLayout
       programme={null}
       sousTitre="Administration"
-      teinte="bg-orange/15 text-orange-sombre"
       identite={s.nom ?? s.email}
       role="Administration du programme"
       nav={[

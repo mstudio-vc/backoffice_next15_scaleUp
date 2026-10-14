@@ -8,7 +8,6 @@ export default async function EntrepriseLayout({ children }: { children: React.R
     <EspaceLayout
       programme={"scaleup"}
       sousTitre={"Espace entreprise"}
-      teinte={"bg-menthe/20 text-vert"}
       identite={s.nom ?? s.email}
       role="Lauréat"
       nav={[

@@ -11,7 +11,6 @@ export default async function PartenaireLayout({ children }: { children: React.R
     <EspaceLayout
       programme={null}
       sousTitre="Espace partenaire"
-      teinte="bg-vert/10 text-vert-sombre"
       identite={s.nom ?? s.email}
       role="Partenaire"
       nav={[
