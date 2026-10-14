@@ -3,6 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { demandesOffres, journal, offres, organisations } from "@/db/schema";
 import { exigerPartenaire } from "@/lib/garde";
+import { EntetePage, Vide } from "@/components/page-entete";
 import { STATUT_DEMANDE, TYPE_ORGANISATION, type StatutDemande } from "@/lib/vocabulaire";
 
 /** Les demandes des lauréats sur les offres du partenaire connecté. */
@@ -33,8 +34,8 @@ export default async function PartenaireDemandes() {
     const statut = formData.get("statut") as StatutDemande;
     if (!["acceptee", "refusee"].includes(statut)) return;
 
-    // On revérifie que la demande porte bien sur une offre DE CE partenaire : l'affichage
-    // n'est pas une autorisation.
+    // On revérifie que la demande porte sur une offre DE CE partenaire : l'affichage n'est
+    // pas une autorisation.
     const [d] = await db
       .select({ offreId: demandesOffres.offreId })
       .from(demandesOffres)
@@ -61,66 +62,64 @@ export default async function PartenaireDemandes() {
   const traitees = lignes.filter((l) => l.demande.statut !== "envoyee");
 
   return (
-    <div className="flex flex-col gap-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-lg font-semibold">
-          {enAttente.length} demande{enAttente.length > 1 ? "s" : ""} à traiter
-        </h1>
-        <div className="mt-4 flex flex-col gap-3">
-          {enAttente.map(({ demande, offreTitre, laureat, laureatType, laureatLocalisation, laureatEmail }) => (
-            <article key={demande.id} className="flex flex-wrap items-start gap-4 rounded-xl p-4 ring-1 ring-slate-200">
-              <div className="min-w-0 grow">
-                <h2 className="font-semibold">{laureat}</h2>
-                <p className="text-sm text-slate-500">
-                  {TYPE_ORGANISATION[laureatType]}
-                  {laureatLocalisation ? ` · ${laureatLocalisation}` : ""}
-                  {laureatEmail ? ` · ${laureatEmail}` : ""}
+    <>
+      <EntetePage
+        titre="Demandes reçues"
+        description="Les lauréats qui souhaitent bénéficier de vos offres."
+      />
+
+      <div className="flex flex-col gap-3">
+        {enAttente.map(({ demande, offreTitre, laureat, laureatType, laureatLocalisation, laureatEmail }) => (
+          <article
+            key={demande.id}
+            className="flex flex-wrap items-start gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10"
+          >
+            <div className="min-w-0 grow">
+              <h2 className="font-semibold text-encre">{laureat}</h2>
+              <p className="text-sm text-pierre">
+                {TYPE_ORGANISATION[laureatType]}
+                {laureatLocalisation ? ` · ${laureatLocalisation}` : ""}
+                {laureatEmail ? ` · ${laureatEmail}` : ""}
+              </p>
+              <p className="mt-2 text-sm text-graphite">
+                Demande sur <b className="text-encre">{offreTitre}</b>
+                <span className="text-pierre"> · {demande.creeLe.toLocaleDateString("fr-FR")}</span>
+              </p>
+              {demande.message ? (
+                <p className="mt-2 rounded-xl bg-papier px-4 py-3 text-sm whitespace-pre-line text-graphite">
+                  {demande.message}
                 </p>
-                <p className="mt-2 text-sm text-slate-700">
-                  Demande sur <span className="font-medium">{offreTitre}</span>
-                  <span className="text-slate-500">
-                    {" "}· {demande.creeLe.toLocaleDateString("fr-FR")}
-                  </span>
-                </p>
-                {demande.message ? (
-                  <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm whitespace-pre-line text-slate-700">
-                    {demande.message}
-                  </p>
-                ) : null}
-              </div>
-              <form action={traiter} className="flex gap-2">
-                <input type="hidden" name="demandeId" value={demande.id} />
-                <button
-                  name="statut"
-                  value="acceptee"
-                  className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800"
-                >
-                  Accepter
-                </button>
-                <button
-                  name="statut"
-                  value="refusee"
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
-                >
-                  Refuser
-                </button>
-              </form>
-            </article>
-          ))}
-          {enAttente.length === 0 ? (
-            <p className="rounded-xl bg-slate-50 p-6 text-center text-slate-500">
-              Aucune demande en attente.
-            </p>
-          ) : null}
-        </div>
-      </section>
+              ) : null}
+            </div>
+            <form action={traiter} className="flex shrink-0 gap-2">
+              <input type="hidden" name="demandeId" value={demande.id} />
+              <button
+                name="statut"
+                value="acceptee"
+                className="rounded-lg bg-vert px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-vert-mid"
+              >
+                Accepter
+              </button>
+              <button
+                name="statut"
+                value="refusee"
+                className="rounded-lg border border-brume px-3.5 py-2 text-sm font-medium text-graphite transition hover:bg-papier"
+              >
+                Refuser
+              </button>
+            </form>
+          </article>
+        ))}
+
+        {enAttente.length === 0 ? <Vide texte="Aucune demande en attente." /> : null}
+      </div>
 
       {traitees.length > 0 ? (
-        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Demandes traitées</h2>
+        <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
+          <h2 className="text-lg font-semibold text-encre">Demandes traitées</h2>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[40rem] text-sm">
-              <thead className="text-left text-xs tracking-wide text-slate-500 uppercase">
+              <thead className="text-left text-[11px] font-semibold tracking-wide text-pierre uppercase">
                 <tr>
                   <th className="py-2 pr-4">Lauréat</th>
                   <th className="py-2 pr-4">Offre</th>
@@ -130,11 +129,11 @@ export default async function PartenaireDemandes() {
               </thead>
               <tbody>
                 {traitees.map(({ demande, offreTitre, laureat }) => (
-                  <tr key={demande.id} className="border-t border-slate-100">
-                    <td className="py-3 pr-4 font-medium">{laureat}</td>
-                    <td className="py-3 pr-4 text-slate-600">{offreTitre}</td>
-                    <td className="py-3 pr-4 text-slate-600">{STATUT_DEMANDE[demande.statut]}</td>
-                    <td className="py-3 text-slate-600">
+                  <tr key={demande.id} className="border-t border-brume/60">
+                    <td className="py-3 pr-4 font-medium text-encre">{laureat}</td>
+                    <td className="py-3 pr-4 text-graphite">{offreTitre}</td>
+                    <td className="py-3 pr-4 text-graphite">{STATUT_DEMANDE[demande.statut]}</td>
+                    <td className="py-3 text-graphite">
                       {demande.traiteeLe ? demande.traiteeLe.toLocaleDateString("fr-FR") : "—"}
                     </td>
                   </tr>
@@ -144,6 +143,6 @@ export default async function PartenaireDemandes() {
           </div>
         </section>
       ) : null}
-    </div>
+    </>
   );
 }

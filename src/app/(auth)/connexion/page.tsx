@@ -5,6 +5,7 @@ import { utilisateurs } from "@/db/schema";
 import { verifierMotDePasse } from "@/lib/auth/password";
 import { ouvrirSession, sessionCourante } from "@/lib/auth/session";
 import { accueilDe } from "@/lib/garde";
+import { Champ, BOUTON } from "@/components/champ";
 
 // La page lit `searchParams` (le message d'erreur après un échec de connexion) et consulte la
 // session : rien n'est prérendrable. Avec `cacheComponents`, c'est `instant = false` qui déclare
@@ -50,43 +51,43 @@ export default async function Connexion({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200">
-      <h1 className="text-xl font-semibold">Connexion</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Votre accès vous a été transmis par l&apos;administration du programme.
-      </p>
+    <>
+      <div>
+        <h2 className="text-2xl font-semibold text-encre">Connexion</h2>
+        <p className="mt-1 text-[15px] text-ardoise">
+          Votre accès vous a été transmis par l&apos;administration du programme.
+        </p>
+      </div>
 
       {erreur ? (
-        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-xl border border-orange/30 bg-orange/10 px-3.5 py-3 text-sm text-orange-sombre">
           Identifiants incorrects, ou compte non activé.
         </p>
       ) : null}
 
-      <form action={connecter} className="mt-5 flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          Adresse e-mail
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="username"
-            className="h-11 rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          Mot de passe
-          <input
-            name="motDePasse"
-            type="password"
-            required
-            autoComplete="current-password"
-            className="h-11 rounded-lg border border-slate-300 px-3 font-normal outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-          />
-        </label>
-        <button className="mt-2 h-11 rounded-lg bg-indigo-700 font-semibold text-white hover:bg-indigo-800">
-          Se connecter
-        </button>
+      <form action={connecter} className="flex flex-col gap-4">
+        <Champ
+          label="Adresse e-mail"
+          name="email"
+          type="email"
+          required
+          autoComplete="username"
+          placeholder="vous@entreprise.ci"
+        />
+        <Champ
+          label="Mot de passe"
+          name="motDePasse"
+          type="password"
+          required
+          autoComplete="current-password"
+        />
+        <button className={BOUTON + " mt-1"}>Se connecter</button>
       </form>
-    </div>
+
+      <p className="border-t border-brume pt-4 text-[13px] text-pierre">
+        Pas encore d&apos;accès ? Il n&apos;y a pas d&apos;inscription libre : chaque compte est
+        ouvert par l&apos;administration, qui vous envoie un lien pour choisir votre mot de passe.
+      </p>
+    </>
   );
 }

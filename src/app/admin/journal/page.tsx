@@ -34,14 +34,14 @@ export default async function Journal() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h1 className="text-lg font-semibold">Exports</h1>
         <div className="mt-4 flex flex-wrap gap-2">
           {EXPORTS.map(([cle, label]) => (
             <a
               key={cle}
               href={`/admin/exports/${cle}`}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-graphite ring-1 ring-brume hover:bg-creme"
             >
               {label} (CSV)
             </a>
@@ -49,12 +49,12 @@ export default async function Journal() {
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
         <h2 className="text-lg font-semibold">Journal d&apos;activité</h2>
-        <p className="mt-1 text-sm text-slate-500">Les 200 derniers évènements.</p>
+        <p className="mt-1 text-sm text-pierre">Les 200 derniers évènements.</p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[46rem] text-sm">
-            <thead className="text-left text-xs tracking-wide text-slate-500 uppercase">
+            <thead className="text-left text-xs tracking-wide text-pierre uppercase">
               <tr>
                 <th className="py-2 pr-4">Quand</th>
                 <th className="py-2 pr-4">Qui</th>
@@ -64,18 +64,18 @@ export default async function Journal() {
             </thead>
             <tbody>
               {lignes.map((l) => (
-                <tr key={l.id} className="border-t border-slate-100">
-                  <td className="py-2.5 pr-4 whitespace-nowrap text-slate-600">
+                <tr key={l.id} className="border-t border-vert/10">
+                  <td className="py-2.5 pr-4 whitespace-nowrap text-ardoise">
                     {l.creeLe.toLocaleString("fr-FR")}
                   </td>
-                  <td className="py-2.5 pr-4 text-slate-600">{l.auteur ?? "système"}</td>
+                  <td className="py-2.5 pr-4 text-ardoise">{l.auteur ?? "système"}</td>
                   <td className="py-2.5 pr-4 font-medium">{l.action}</td>
-                  <td className="py-2.5 text-slate-600">{l.cible ?? l.organisation ?? "—"}</td>
+                  <td className="py-2.5 text-ardoise">{l.cible ?? l.organisation ?? "—"}</td>
                 </tr>
               ))}
               {lignes.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-slate-500">
+                  <td colSpan={4} className="py-6 text-center text-pierre">
                     Rien encore.
                   </td>
                 </tr>

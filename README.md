@@ -39,6 +39,43 @@ personnelles. Le script est idempotent — le rejouer ne crée pas de doublon.
 
 ---
 
+## Le verrou de dépendances se régénère sous Linux
+
+```bash
+npm run verrou      # après toute modification de package.json
+```
+
+npm construit l'arborescence pour la plateforme courante. Sur macOS il hisse `fdir` à la
+racine, sur Linux il le niche sous `tinyglobby`, et les variantes wasm de Tailwind n'existent
+que côté Linux. **Un verrou produit sur macOS fait échouer `npm ci` sur le coureur et sur le
+serveur**, tous deux en Linux x86_64 — l'inverse n'est pas vrai, npm ignorant les paquets
+optionnels hors plateforme.
+
+Ça a coûté deux déploiements avant d'être compris. Le script passe par un conteneur ; Docker
+doit tourner.
+
+---
+
+## Les courriels
+
+**Un seul point d'envoi** : `src/lib/courriel/envoi.ts`. Aucun autre module n'appelle Brevo ni
+nodemailer, et tous les modèles vivent dans `modeles.ts`. On y gagne la trace au journal, le
+choix du transport et une mise en forme commune, décidés une fois.
+
+Trois transports, dans cet ordre : **API Brevo** si `BREVO_API_KEY`, **relais SMTP** si
+`SMTP_HOST`, **console** sinon.
+
+L'API passe avant le SMTP à dessein : sur un VPS mutualisé, le port 587 sortant est souvent
+filtré, et un envoi en HTTPS ne s'en soucie pas.
+
+La console n'est pas un pis-aller mais le mode de développement voulu — un lien d'activation ne
+doit pas partir vers une vraie adresse pendant qu'on teste. `GET /api/sante` dit quel transport
+est actif, sans révéler aucune valeur.
+
+> L'expéditeur de `MAIL_FROM` doit être **vérifié dans Brevo**, sinon l'envoi est refusé.
+
+---
+
 ## Les décisions qui structurent le reste
 
 **La candidature est figée, la fiche est vivante.** Deux tables distinctes. `candidatures`

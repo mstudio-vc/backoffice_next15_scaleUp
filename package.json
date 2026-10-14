@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "db:generer": "drizzle-kit generate",
     "db:migrer": "drizzle-kit migrate",
@@ -13,9 +14,11 @@
     "creer:root": "tsx --conditions=react-server scripts/creer-root.mts",
     "importer:candidatures": "tsx --conditions=react-server scripts/importer-candidatures.mts",
     "importer:documents": "tsx --conditions=react-server scripts/importer-documents.mts",
-    "semer": "tsx --conditions=react-server scripts/semer.mts"
+    "semer": "tsx --conditions=react-server scripts/semer.mts",
+    "verrou": "sh scripts/verrou.sh"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^6.0.3",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.0",
     "nodemailer": "^10.0.16",
@@ -39,5 +42,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20.9 <21"
   }
 }

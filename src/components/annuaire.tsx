@@ -49,14 +49,14 @@ export async function Annuaire({
             href={f.cle === "toutes" ? base : `${base}?filtre=${f.cle}`}
             className={
               f.cle === choisi.cle
-                ? "rounded-full bg-slate-900 px-4 py-1.5 text-sm font-semibold text-white"
-                : "rounded-full px-4 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-slate-300 hover:bg-white"
+                ? "rounded-full bg-vert px-4 py-1.5 text-sm font-semibold text-white"
+                : "rounded-full px-4 py-1.5 text-sm font-medium text-ardoise ring-1 ring-brume hover:bg-white"
             }
           >
             {f.label}
           </Link>
         ))}
-        <span className="ml-auto text-sm text-slate-500">
+        <span className="ml-auto text-sm text-pierre">
           {lignes.length} organisation{lignes.length > 1 ? "s" : ""} dans cette vue
         </span>
       </div>
@@ -65,14 +65,14 @@ export async function Annuaire({
         {lignes.map((o) => (
           <article
             key={o.id}
-            className="flex flex-wrap items-start gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+            className="flex flex-wrap items-start gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10"
           >
-            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-slate-100 text-lg font-bold text-slate-500">
+            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-papier text-lg font-bold text-pierre">
               {o.denominationSociale.trim()[0]?.toUpperCase() ?? "?"}
             </span>
             <div className="min-w-0 grow">
               <h3 className="font-semibold">{o.denominationSociale}</h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-pierre">
                 {/* Pour un partenaire, son métier est plus parlant que le mot « partenaire ». */}
                 {o.type === "partenaire" && o.typePartenaire
                   ? TYPE_PARTENAIRE[o.typePartenaire]
@@ -81,12 +81,12 @@ export async function Annuaire({
                 {o.statut !== "validee" ? ` · ${o.statut === "en_attente" ? "en attente" : "suspendue"}` : ""}
               </p>
               {o.description ? (
-                <p className="mt-2 text-sm text-slate-700">{o.description}</p>
+                <p className="mt-2 text-sm text-graphite">{o.description}</p>
               ) : null}
               {o.secteurs.length > 0 ? (
                 <ul className="mt-2 flex flex-wrap gap-1.5">
                   {o.secteurs.map((s) => (
-                    <li key={s} className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-800">
+                    <li key={s} className="rounded-full bg-feuille/10 px-2.5 py-1 text-xs font-medium text-vert">
                       {s}
                     </li>
                   ))}
@@ -98,7 +98,7 @@ export async function Annuaire({
                 href={o.siteInternet}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-graphite ring-1 ring-brume hover:bg-creme"
               >
                 Site
               </a>
@@ -106,7 +106,7 @@ export async function Annuaire({
           </article>
         ))}
         {lignes.length === 0 ? (
-          <p className="rounded-2xl bg-white p-6 text-center text-slate-500 shadow-sm ring-1 ring-slate-200">
+          <p className="rounded-2xl bg-white p-6 text-center text-pierre shadow-sm ring-1 ring-vert/10">
             Aucune organisation dans cette vue.
           </p>
         ) : null}

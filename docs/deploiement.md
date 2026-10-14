@@ -96,15 +96,17 @@ de la base. Le mot de passe est engendré sur le serveur et n'en sort jamais :
 DATABASE_URL=postgresql://app_ivoire_tech:<mot de passe>@127.0.0.1:5432/app_ivoire_tech
 APP_URL=https://app.ivoire.tech
 STOCKAGE_DIR=/var/www/app.ivoire.tech/stockage
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
+BREVO_API_KEY=
 MAIL_FROM="Ivoire Tech <no-reply@ivoire.tech>"
 ```
 
-> Tant que `SMTP_HOST` est vide, **aucun courriel ne part** : les liens d'accès ne sont écrits
-> que dans le journal du service. À renseigner avant d'ouvrir le premier accès à un lauréat.
+> Tant que `BREVO_API_KEY` est vide, **aucun courriel ne part** : les liens d'accès ne sont
+> écrits que dans le journal du service. À renseigner avant d'ouvrir le premier accès à un
+> lauréat, et l'adresse de `MAIL_FROM` doit être un expéditeur **vérifié dans Brevo**.
+>
+> `curl -s https://app.ivoire.tech/api/sante` le dit : `"courriel":"console"` signifie que rien
+> ne part. Le relais SMTP reste utilisable (`SMTP_HOST=smtp-relay.brevo.com`), mais l'API HTTP
+> ne dépend pas d'un port sortant que l'hébergeur pourrait filtrer.
 
 ### Le service
 
