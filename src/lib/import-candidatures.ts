@@ -27,12 +27,19 @@ import { COLONNE_SECTEURS, REPLIS, premier, secteursDe, type LigneCandidature } 
 
 export type Programme = "next15" | "scaleup";
 
-export type Resultat = {
+export type ResultatFeuille = {
+  feuille: string;
   programme: Programme;
   lus: number;
   crees: number;
   /** Déjà en base : l'import a été rejoué, ou la même candidature est dans deux fichiers. */
   ignores: number;
+};
+
+export type Resultat = {
+  feuilles: ResultatFeuille[];
+  /** Feuilles sans entête de candidature : feuille de garde, notes, brouillon. */
+  ecartees: string[];
 };
 
 /** Le nombre de colonnes distingue les deux formulaires sans se fier au nom du fichier. */
@@ -62,30 +69,19 @@ function texte(v: unknown): string | null {
   return s || null;
 }
 
-/** La plus grande feuille non vide : Jotform exporte parfois une feuille de garde. */
-function feuilleUtile(classeur: ExcelJS.Workbook): ExcelJS.Worksheet {
-  const feuilles = classeur.worksheets.filter((f) => f.rowCount > 1);
-  if (feuilles.length === 0) throw new Error("Le classeur ne contient aucune feuille de données.");
-  return feuilles.reduce((a, b) => (b.rowCount > a.rowCount ? b : a));
-}
-
-export async function importerClasseur(tampon: Buffer | ArrayBuffer): Promise<Resultat> {
-  const classeur = new ExcelJS.Workbook();
-  try {
-    await classeur.xlsx.load(tampon as ArrayBuffer);
-  } catch {
-    // La bibliothèque parle de « central directory » et renvoie vers sa doc : illisible pour
-    // l'administrateur qui vient de déposer un fichier dans l'écran d'import.
-    throw new Error("Ce fichier n'est pas un classeur .xlsx lisible.");
-  }
-  const feuille = feuilleUtile(classeur);
+/**
+ * Toutes les feuilles traitées, une par programme.
+ *
+ * Un classeur par formulaire est le cas courant, mais les deux programmes peuvent être réunis
+ * dans un seul classeur — c'est ce qui permet de ne manipuler qu'un fichier. Chaque feuille est
+ * reconnue indépendamment : rien n'oblige à les ranger dans un ordre donné.
+ */
+async function importerFeuille(
+  feuille: ExcelJS.Worksheet,
+): Promise<ResultatFeuille | "ecartee"> {
 
   const entetes = (feuille.getRow(1).values as unknown[]).slice(1).map((v) => texte(v) ?? "");
-  if (!entetes.includes(FICHE.denominationSociale)) {
-    throw new Error(
-      `Ce fichier n'est pas un export de candidature : la colonne « ${FICHE.denominationSociale} » est absente.`,
-    );
-  }
+  if (!entetes.includes(FICHE.denominationSociale)) return "ecartee";
   const programme = programmeDe(entetes.length);
 
   let lus = 0;
@@ -136,6 +132,7 @@ export async function importerClasseur(tampon: Buffer | ArrayBuffer): Promise<Re
           rccm: ligne[FICHE.rccm],
           ncc: ligne[FICHE.ncc],
           siegeSocial: premier(ligne, REPLIS.siegeSocial),
+          localisation: premier(ligne, REPLIS.localisation),
           adresseSiege: ligne[FICHE.adresseSiege],
           telephone: premier(ligne, REPLIS.telephone),
           emailOfficiel: ligne[FICHE.emailOfficiel],
@@ -157,5 +154,32 @@ export async function importerClasseur(tampon: Buffer | ArrayBuffer): Promise<Re
     crees += 1;
   }
 
-  return { programme, lus, crees, ignores: lus - crees };
+  return { feuille: feuille.name, programme, lus, crees, ignores: lus - crees };
+}
+
+export async function importerClasseur(tampon: Buffer | ArrayBuffer): Promise<Resultat> {
+  const classeur = new ExcelJS.Workbook();
+  try {
+    await classeur.xlsx.load(tampon as ArrayBuffer);
+  } catch {
+    // La bibliothèque parle de « central directory » et renvoie vers sa doc : illisible pour
+    // l'administrateur qui vient de déposer un fichier dans l'écran d'import.
+    throw new Error("Ce fichier n'est pas un classeur .xlsx lisible.");
+  }
+
+  const feuilles: ResultatFeuille[] = [];
+  const ecartees: string[] = [];
+  for (const f of classeur.worksheets) {
+    if (f.rowCount <= 1) continue;
+    const r = await importerFeuille(f);
+    if (r === "ecartee") ecartees.push(f.name);
+    else feuilles.push(r);
+  }
+
+  if (feuilles.length === 0) {
+    throw new Error(
+      `Ce fichier n'est pas un export de candidature : la colonne « ${FICHE.denominationSociale} » est absente.`,
+    );
+  }
+  return { feuilles, ecartees };
 }

@@ -22,8 +22,11 @@ if (fichiers.length === 0) {
 
 for (const f of fichiers) {
   const r = await importerClasseur(await readFile(f));
-  console.info(
-    `${f} → ${r.programme} : ${r.lus} lignes lues, ${r.crees} créées, ${r.ignores} déjà présentes.`,
-  );
+  for (const fe of r.feuilles) {
+    console.info(
+      `${f} [${fe.feuille}] → ${fe.programme} : ${fe.lus} lignes lues, ${fe.crees} créées, ${fe.ignores} déjà présentes.`,
+    );
+  }
+  for (const nom of r.ecartees) console.info(`${f} [${nom}] → écartée, pas un tableau de candidatures.`);
 }
 process.exit(0);
