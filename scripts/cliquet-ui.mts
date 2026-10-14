@@ -103,7 +103,7 @@ const estDuCode = (t: string) => TOKENS_DE_CODE.some((k) => t.includes(k));
  * 539 au 14 octobre 2026, avant la passe de simplification : l'écran se présentait au lieu
  * d'afficher son contenu. L'écran d'import à lui seul en portait 118.
  */
-const BUDGET_PROSE = 208;
+const BUDGET_PROSE = 203;
 
 let echecs = 0;
 
