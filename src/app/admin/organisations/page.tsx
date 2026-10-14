@@ -38,7 +38,7 @@ export default async function AdminOrganisations() {
     <>
       <EntetePage
         titre="Organisations"
-        description="Lauréats, partenaires et investisseurs. Les lauréats arrivent par l'import des candidatures."
+        description="Lauréats et partenaires. Les lauréats arrivent par l'import des candidatures ; les partenaires s'ajoutent ici."
         action={{ href: "/admin/organisations/nouvelle", label: "Ajouter un partenaire" }}
       />
 
