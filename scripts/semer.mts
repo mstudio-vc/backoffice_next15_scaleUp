@@ -41,6 +41,7 @@ const PARTIES: Partie[] = [
   {
     nom: "Ecobank Côte d'Ivoire",
     type: "partenaire",
+    metier: "banque",
     description: "Banque panafricaine. Offres bancaires dédiées aux entreprises accompagnées.",
     localisation: "Abidjan",
     site: "https://ecobank.com",
@@ -49,6 +50,7 @@ const PARTIES: Partie[] = [
   {
     nom: "Orange Digital Center",
     type: "partenaire",
+    metier: "industrie",
     description: "Formation, accompagnement technique et crédits cloud pour les équipes produit.",
     localisation: "Abidjan",
     site: "https://orangedigitalcenters.com",
@@ -57,6 +59,7 @@ const PARTIES: Partie[] = [
   {
     nom: "Cabinet CERIN",
     type: "partenaire",
+    metier: "conseil",
     description: "Conseil juridique et fiscal, avec une pratique OHADA.",
     localisation: "Abidjan",
     secteurs: ["Juridique", "Fiscalité"],
