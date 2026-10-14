@@ -4,20 +4,13 @@ import { db } from "@/db/client";
 import { organisations, utilisateurs } from "@/db/schema";
 import { ouvrirAcces } from "@/lib/acces";
 import { exigerRoot } from "@/lib/garde";
-import { EntetePage, Vide } from "@/components/page-entete";
-import { TYPE_ORGANISATION } from "@/lib/vocabulaire";
-
-const LIBELLE_STATUT = {
-  invite: "Lien envoyé, mot de passe à définir",
-  actif: "Actif",
-  suspendu: "Suspendu",
-} as const;
-
-const PASTILLE = {
-  invite: "bg-orange/15 text-orange-sombre",
-  actif: "bg-feuille/15 text-vert",
-  suspendu: "bg-papier text-pierre",
-} as const;
+import { Badge } from "@/components/badge";
+import { CarteTable, EntetePage, TD, TH, TR, Vide } from "@/components/page-entete";
+import {
+  STATUT_UTILISATEUR,
+  TON_STATUT_UTILISATEUR,
+  TYPE_ORGANISATION,
+} from "@/lib/vocabulaire";
 
 // Cette page ne fait qu'une chose : lister. L'ouverture d'un accès vit sur sa propre route.
 export default async function Acces() {
@@ -49,57 +42,58 @@ export default async function Acces() {
     <>
       <EntetePage
         titre="Accès"
-        description="Les comptes de la plateforme. Personne ne s'inscrit : chaque accès est ouvert ici."
+        etat={`${comptes.length} compte${comptes.length > 1 ? "s" : ""} · ${
+          comptes.filter((c) => c.statut === "invite").length
+        } à activer`}
         action={{ href: "/admin/acces/nouveau", label: "Ouvrir un accès" }}
       />
 
       {comptes.length === 0 ? (
         <Vide
-          texte="Aucun compte pour le moment."
+          titre="Aucun compte"
           action={{ href: "/admin/acces/nouveau", label: "Ouvrir le premier accès" }}
         />
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-vert/10">
-          <table className="w-full min-w-[48rem] text-sm">
-            <thead className="border-b border-vert/10 text-left text-[11px] tracking-wide text-pierre uppercase">
+        <CarteTable>
+            <thead>
               <tr>
-                <th className="px-5 py-3">Compte</th>
-                <th className="px-5 py-3">Organisation</th>
-                <th className="px-5 py-3">État</th>
-                <th className="px-5 py-3">Dernière connexion</th>
-                <th className="px-5 py-3"></th>
+                <th className={TH}>Compte</th>
+                <th className={TH}>Organisation</th>
+                <th className={TH}>État</th>
+                <th className={TH}>Dernière connexion</th>
+                <th className={`${TH} text-right`}>Action</th>
               </tr>
             </thead>
             <tbody>
               {comptes.map((c) => (
-                <tr key={c.id} className="border-b border-vert/5 last:border-0 hover:bg-papier/60">
-                  <td className="px-5 py-3.5">
-                    <span className="font-medium text-encre">{c.email}</span>
-                    <span className="block text-xs text-pierre">
+                <tr key={c.id} className={TR}>
+                  <td className={TD}>
+                    <span className="font-normal text-encre">{c.email}</span>
+                    <span className="block text-sm text-pierre">
                       {c.nom ? `${c.nom} · ` : ""}
                       {c.role === "root" ? "Administration" : "Membre"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-ardoise">
+                  <td className={`${TD} text-ardoise`}>
                     {c.organisation ?? "—"}
                     {c.typeOrganisation ? (
-                      <span className="block text-xs text-pierre">
+                      <span className="block text-sm text-pierre">
                         {TYPE_ORGANISATION[c.typeOrganisation]}
                       </span>
                     ) : null}
                   </td>
-                  <td className="px-5 py-3.5">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${PASTILLE[c.statut]}`}>
-                      {LIBELLE_STATUT[c.statut]}
-                    </span>
+                  <td className={TD}>
+                    <Badge ton={TON_STATUT_UTILISATEUR[c.statut]}>
+                      {STATUT_UTILISATEUR[c.statut]}
+                    </Badge>
                   </td>
-                  <td className="px-5 py-3.5 text-ardoise">
+                  <td className={`${TD} text-ardoise`}>
                     {c.derniereConnexionLe ? c.derniereConnexionLe.toLocaleDateString("fr-FR") : "jamais"}
                   </td>
-                  <td className="px-5 py-3.5 text-right">
+                  <td className={`${TD} text-right`}>
                     <form action={renvoyer}>
                       <input type="hidden" name="utilisateurId" value={c.id} />
-                      <button className="rounded-lg border border-brume px-3 py-1.5 text-sm font-medium text-graphite transition hover:bg-papier">
+                      <button className="rounded border border-brume px-3 py-1.5 text-sm font-normal text-graphite transition hover:bg-papier">
                         Renvoyer le lien
                       </button>
                     </form>
@@ -107,8 +101,7 @@ export default async function Acces() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+        </CarteTable>
       )}
     </>
   );

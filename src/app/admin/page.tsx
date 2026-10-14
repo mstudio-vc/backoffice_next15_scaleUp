@@ -29,24 +29,24 @@ export default async function AdminAccueil() {
         {tuiles.map((t) => (
           <div
             key={t.label}
-            className="relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10"
+            className="relative overflow-hidden rounded bg-white p-5 ring-1 ring-brume"
           >
             <span className={`absolute inset-y-0 left-0 w-1 ${t.teinte}`} />
-            <p className="text-3xl font-semibold text-encre tabular-nums">{t.valeur}</p>
+            <p className="text-2xl font-bold text-encre tabular-nums">{t.valeur}</p>
             <p className="mt-1 text-sm text-pierre">{t.label}</p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
-        <h2 className="text-lg font-semibold">Par où commencer</h2>
+      <section className="rounded bg-white p-6 ring-1 ring-brume">
+        <h2 className="text-lg font-bold">Par où commencer</h2>
         <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm text-graphite">
           <li>
             Importer les lauréats depuis les exports de candidature :{" "}
             <code className="font-mono text-encre">npm run importer:candidatures</code>
           </li>
           <li>
-            <Link href="/admin/acces" className="font-semibold text-vert hover:underline">
+            <Link href="/admin/acces" className="font-bold text-vert hover:underline">
               Ouvrir un accès
             </Link>{" "}
             pour chaque lauréat : le lien de définition de mot de passe part par courriel.

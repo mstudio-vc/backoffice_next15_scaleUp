@@ -47,26 +47,24 @@ export default async function NouvelleOffre() {
   }
 
   const champSelect =
-    "h-11 rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10";
+    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
   return (
     <>
       <Retour href="/admin/offres" label="Offres" />
-      <h1 className="mb-1 text-2xl font-semibold text-encre">Publier une offre</h1>
-      <p className="mb-6 max-w-2xl text-[15px] text-ardoise">
-        L&apos;offre est rattachée à l&apos;organisation partenaire, pas à un compte. Le jour où
-        un espace partenaire existera, rien ne bougera en base.
-      </p>
+      {/* L'offre est rattachée à l'ORGANISATION partenaire, pas à un compte : le jour où un
+          espace partenaire existera, rien ne bougera en base. */}
+      <h1 className="mb-4 text-2xl font-bold text-encre">Publier une offre</h1>
 
       <CarteFormulaire>
         {partenaires.length === 0 ? (
-          <p className="rounded-xl border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
+          <p className="rounded border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
             Aucun partenaire en base. Ajoutez-en un depuis Organisations avant de publier.
           </p>
         ) : (
           <form action={publier} className="grid gap-5 sm:grid-cols-2">
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold text-graphite">Partenaire</span>
+              <span className="text-base font-bold text-graphite">Partenaire</span>
               <select name="partenaireId" required className={champSelect}>
                 {partenaires.map((p) => (
                   <option key={p.id} value={p.id}>{p.nom}</option>
@@ -77,7 +75,7 @@ export default async function NouvelleOffre() {
             <Champ label="Titre" name="titre" required placeholder="Compte professionnel sans frais la première année" />
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold text-graphite">Catégorie</span>
+              <span className="text-base font-bold text-graphite">Catégorie</span>
               <select name="categorie" className={champSelect}>
                 {Object.entries(CATEGORIE_OFFRE).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -86,7 +84,7 @@ export default async function NouvelleOffre() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold text-graphite">Public visé</span>
+              <span className="text-base font-bold text-graphite">Public visé</span>
               <select name="cible" className={champSelect}>
                 {Object.entries(CIBLE_OFFRE).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -95,13 +93,13 @@ export default async function NouvelleOffre() {
             </label>
 
             <label className="flex flex-col gap-1.5 sm:col-span-2">
-              <span className="text-[13px] font-semibold text-graphite">Description</span>
+              <span className="text-base font-bold text-graphite">Description</span>
               <textarea
                 name="description"
                 required
                 rows={4}
                 placeholder="Ce que le lauréat obtient concrètement, et à quelles conditions."
-                className="rounded-xl border border-brume bg-white p-3.5 text-[15px] text-encre outline-none placeholder:text-pierre focus:border-vert focus:ring-4 focus:ring-vert/10"
+                className="rounded border border-brume bg-white p-3.5 text-base text-encre outline-none placeholder:text-pierre focus:border-vert focus:ring-4 focus:ring-brume"
               />
             </label>
 

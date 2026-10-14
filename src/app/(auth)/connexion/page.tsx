@@ -48,14 +48,14 @@ export default async function Connexion({
   return (
     <>
       <div>
-        <h2 className="text-2xl font-semibold text-encre">Connexion</h2>
-        <p className="mt-1 text-[15px] text-ardoise">
+        <h2 className="text-2xl font-bold text-encre">Connexion</h2>
+        <p className="mt-1 text-base text-ardoise">
           Votre accès vous a été transmis par l&apos;administration du programme.
         </p>
       </div>
 
       {erreur ? (
-        <p className="rounded-xl border border-orange/30 bg-orange/10 px-3.5 py-3 text-sm text-orange-sombre">
+        <p className="rounded border border-orange/30 bg-orange/10 px-3.5 py-3 text-sm text-orange-sombre">
           Identifiants incorrects, ou compte non activé.
         </p>
       ) : null}
@@ -79,10 +79,6 @@ export default async function Connexion({
         <button className={BOUTON + " mt-1"}>Se connecter</button>
       </form>
 
-      <p className="border-t border-brume pt-4 text-[13px] text-pierre">
-        Pas encore d&apos;accès ? Il n&apos;y a pas d&apos;inscription libre : chaque compte est
-        ouvert par l&apos;administration, qui vous envoie un lien pour choisir votre mot de passe.
-      </p>
     </>
   );
 }

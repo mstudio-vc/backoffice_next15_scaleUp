@@ -3,8 +3,14 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { demandesOffres, journal, offres, organisations } from "@/db/schema";
 import { exigerPartenaire } from "@/lib/garde";
-import { EntetePage, Vide } from "@/components/page-entete";
-import { STATUT_DEMANDE, TYPE_ORGANISATION, type StatutDemande } from "@/lib/vocabulaire";
+import { Badge } from "@/components/badge";
+import { EntetePage, TD, TH, TR, Vide } from "@/components/page-entete";
+import {
+  STATUT_DEMANDE,
+  TON_STATUT_DEMANDE,
+  TYPE_ORGANISATION,
+  type StatutDemande,
+} from "@/lib/vocabulaire";
 
 /** Les demandes des lauréats sur les offres du partenaire connecté. */
 export default async function PartenaireDemandes() {
@@ -65,17 +71,19 @@ export default async function PartenaireDemandes() {
     <>
       <EntetePage
         titre="Demandes reçues"
-        description="Les lauréats qui souhaitent bénéficier de vos offres."
+        etat={`${enAttente.length} en attente · ${traitees.length} traitée${
+          traitees.length > 1 ? "s" : ""
+        }`}
       />
 
       <div className="flex flex-col gap-3">
         {enAttente.map(({ demande, offreTitre, laureat, laureatType, laureatLocalisation, laureatEmail }) => (
           <article
             key={demande.id}
-            className="flex flex-wrap items-start gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10"
+            className="flex flex-wrap items-start gap-4 rounded bg-white p-5 ring-1 ring-brume"
           >
             <div className="min-w-0 grow">
-              <h2 className="font-semibold text-encre">{laureat}</h2>
+              <h2 className="font-bold text-encre">{laureat}</h2>
               <p className="text-sm text-pierre">
                 {TYPE_ORGANISATION[laureatType]}
                 {laureatLocalisation ? ` · ${laureatLocalisation}` : ""}
@@ -86,7 +94,7 @@ export default async function PartenaireDemandes() {
                 <span className="text-pierre"> · {demande.creeLe.toLocaleDateString("fr-FR")}</span>
               </p>
               {demande.message ? (
-                <p className="mt-2 rounded-xl bg-papier px-4 py-3 text-sm whitespace-pre-line text-graphite">
+                <p className="mt-2 rounded bg-papier px-4 py-3 text-sm whitespace-pre-line text-graphite">
                   {demande.message}
                 </p>
               ) : null}
@@ -96,14 +104,14 @@ export default async function PartenaireDemandes() {
               <button
                 name="statut"
                 value="acceptee"
-                className="rounded-lg bg-vert px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-vert-mid"
+                className="rounded bg-vert px-3.5 py-2 text-sm font-bold text-white transition hover:bg-vert-mid"
               >
                 Accepter
               </button>
               <button
                 name="statut"
                 value="refusee"
-                className="rounded-lg border border-brume px-3.5 py-2 text-sm font-medium text-graphite transition hover:bg-papier"
+                className="rounded border border-brume px-3.5 py-2 text-sm font-normal text-graphite transition hover:bg-papier"
               >
                 Refuser
               </button>
@@ -111,29 +119,33 @@ export default async function PartenaireDemandes() {
           </article>
         ))}
 
-        {enAttente.length === 0 ? <Vide texte="Aucune demande en attente." /> : null}
+        {enAttente.length === 0 ? <Vide titre="Aucune demande en attente" /> : null}
       </div>
 
       {traitees.length > 0 ? (
-        <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
-          <h2 className="text-lg font-semibold text-encre">Demandes traitées</h2>
+        <section className="mt-8 rounded bg-white p-6 ring-1 ring-brume">
+          <h2 className="text-lg font-bold text-encre">Demandes traitées</h2>
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[40rem] text-sm">
-              <thead className="text-left text-[11px] font-semibold tracking-wide text-pierre uppercase">
+            <table className="w-full text-base">
+              <thead>
                 <tr>
-                  <th className="py-2 pr-4">Lauréat</th>
-                  <th className="py-2 pr-4">Offre</th>
-                  <th className="py-2 pr-4">Réponse</th>
-                  <th className="py-2">Le</th>
+                  <th className={`${TH} pr-4`}>Lauréat</th>
+                  <th className={`${TH} pr-4`}>Offre</th>
+                  <th className={`${TH} pr-4`}>Réponse</th>
+                  <th className={TH}>Le</th>
                 </tr>
               </thead>
               <tbody>
                 {traitees.map(({ demande, offreTitre, laureat }) => (
-                  <tr key={demande.id} className="border-t border-brume/60">
-                    <td className="py-3 pr-4 font-medium text-encre">{laureat}</td>
-                    <td className="py-3 pr-4 text-graphite">{offreTitre}</td>
-                    <td className="py-3 pr-4 text-graphite">{STATUT_DEMANDE[demande.statut]}</td>
-                    <td className="py-3 text-graphite">
+                  <tr key={demande.id} className={TR}>
+                    <td className={`${TD} pr-4 text-encre`}>{laureat}</td>
+                    <td className={`${TD} pr-4 text-graphite`}>{offreTitre}</td>
+                    <td className={`${TD} pr-4`}>
+                      <Badge ton={TON_STATUT_DEMANDE[demande.statut]}>
+                        {STATUT_DEMANDE[demande.statut]}
+                      </Badge>
+                    </td>
+                    <td className={`${TD} text-graphite`}>
                       {demande.traiteeLe ? demande.traiteeLe.toLocaleDateString("fr-FR") : "—"}
                     </td>
                   </tr>

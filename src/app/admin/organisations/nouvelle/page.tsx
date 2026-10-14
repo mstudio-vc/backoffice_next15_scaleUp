@@ -51,23 +51,21 @@ export default async function NouvelleOrganisation() {
   }
 
   const champSelect =
-    "h-11 rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10";
+    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
   return (
     <>
       <Retour href="/admin/organisations" label="Organisations" />
-      <h1 className="mb-1 text-2xl font-semibold text-encre">Ajouter un partenaire</h1>
-      <p className="mb-6 max-w-2xl text-[15px] text-ardoise">
-        Les lauréats ne se saisissent pas à la main : ils arrivent par l&apos;import des
-        candidatures, avec leur dossier complet.
-      </p>
+      {/* Les lauréats n'arrivent jamais par ici : ils viennent de l'import des candidatures,
+          avec leur dossier. Cet écran ne sert qu'aux partenaires. */}
+      <h1 className="mb-4 text-2xl font-bold text-encre">Ajouter un partenaire</h1>
 
       <CarteFormulaire>
         <form action={creer} className="grid gap-5 sm:grid-cols-2">
           <Champ label="Nom" name="nom" required placeholder="Ecobank Côte d'Ivoire" />
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">Métier</span>
+            <span className="text-base font-bold text-graphite">Métier</span>
             <select name="typePartenaire" className={champSelect}>
               {Object.entries(TYPE_PARTENAIRE).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>

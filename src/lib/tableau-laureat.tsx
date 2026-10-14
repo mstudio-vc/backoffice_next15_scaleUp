@@ -47,9 +47,9 @@ export async function TableauLaureat({
       {/* Bandeau d'identité : le nom, l'état, et ce qu'il reste à compléter. Les candidatures
           sont très lacunaires — autant le dire dès le premier écran plutôt que de laisser
           découvrir des champs vides un par un. */}
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-vert/10">
+      <section className="overflow-hidden rounded bg-white ring-1 ring-brume">
         <div className="bg-vert px-6 py-5 text-white">
-          <h1 className="text-2xl font-semibold">{org.denominationSociale}</h1>
+          <h1 className="text-2xl font-bold">{org.denominationSociale}</h1>
           <p className="mt-1 text-sm text-white/75">
             {org.nomCommercial ? `${org.nomCommercial} · ` : ""}
             {org.type === "startup" ? "Ivoire Tech Next 15" : "Ivoire Tech Scale Up"}
@@ -61,15 +61,15 @@ export async function TableauLaureat({
         <dl className="grid gap-x-8 gap-y-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3">
           {fiche.map(([k, v]) => (
             <div key={k}>
-              <dt className="text-[11px] font-semibold tracking-wide text-pierre uppercase">{k}</dt>
-              <dd className="mt-0.5 text-[15px] text-encre">
+              <dt className="text-xs font-bold tracking-wide text-pierre uppercase">{k}</dt>
+              <dd className="mt-0.5 text-base text-encre">
                 {v ?? <span className="text-brume">non renseigné</span>}
               </dd>
             </div>
           ))}
         </dl>
 
-        <p className="border-t border-vert/10 bg-papier px-6 py-3 text-sm text-ardoise">
+        <p className="border-t border-brume bg-papier px-6 py-3 text-sm text-ardoise">
           {renseignes} champ{renseignes > 1 ? "s" : ""} sur {fiche.length} renseigné
           {renseignes > 1 ? "s" : ""}.{" "}
           {renseignes < fiche.length
@@ -78,28 +78,28 @@ export async function TableauLaureat({
         </p>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
-        <h2 className="text-lg font-semibold text-encre">Votre candidature</h2>
+      <section className="rounded bg-white p-6 ring-1 ring-brume">
+        <h2 className="text-lg font-bold text-encre">Votre candidature</h2>
         {dossier ? (
           <>
-            <p className="mt-2 text-[15px] text-ardoise">
+            <p className="mt-2 text-base text-ardoise">
               Déposée le{" "}
               <b className="text-encre">
                 {dossier.deposeeLe ? dossier.deposeeLe.toLocaleDateString("fr-FR") : "date non renseignée"}
               </b>{" "}
               · <b className="text-encre">{nbChamps}</b> réponses conservées.
             </p>
-            <p className="mt-3 rounded-xl border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
+            <p className="mt-3 rounded border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
               Elle est conservée telle que vous l&apos;avez signée et ne change plus. Les
               corrections se font sur{" "}
-              <Link href={`${base}/fiche`} className="font-medium text-vert underline">
+              <Link href={`${base}/fiche`} className="font-normal text-vert underline">
                 votre fiche
               </Link>
               .
             </p>
           </>
         ) : (
-          <p className="mt-2 text-[15px] text-pierre">Aucune candidature importée pour le moment.</p>
+          <p className="mt-2 text-base text-pierre">Aucune candidature importée pour le moment.</p>
         )}
       </section>
     </div>

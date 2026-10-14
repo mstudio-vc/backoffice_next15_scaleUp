@@ -65,7 +65,7 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
     revalidatePath(base);
   }
 
-  const champ = "h-11 font-normal " + SAISIE;
+  const champ = "h-8 font-normal " + SAISIE;
   const fige: [string, string | null][] = [
     ["Dénomination sociale", org.denominationSociale],
     ["Forme juridique", org.formeJuridique],
@@ -75,12 +75,10 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-2xl bg-creme p-6 ring-1 ring-vert/10">
-        <h1 className="text-lg font-semibold">Identité déclarée</h1>
-        <p className="mt-1 text-sm text-ardoise">
-          Ces informations proviennent de votre candidature, que vous avez signée. Elles ne se
-          modifient pas ici : écrivez à l&apos;administration du programme si l&apos;une
-          d&apos;elles est inexacte.
+      <section className="rounded bg-creme p-6 ring-1 ring-brume">
+        <h1 className="text-lg font-bold">Identité déclarée</h1>
+        <p className="mt-0.5 text-sm text-pierre">
+          Candidature signée, non modifiable. Une erreur ? Écrivez à l&apos;administration.
         </p>
         <dl className="mt-5 grid gap-x-8 gap-y-3 sm:grid-cols-2">
           {fige.map(([k, v]) => (
@@ -94,19 +92,16 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
         </dl>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10">
-        <h2 className="text-lg font-semibold">Informations à jour</h2>
-        <p className="mt-1 text-sm text-pierre">
-          Ce que vous corrigez ici alimente votre fiche et l&apos;annuaire, visible par les autres
-          organisations de la plateforme une fois votre compte validé.
-        </p>
+      <section className="rounded bg-white p-6 ring-1 ring-brume">
+        <h2 className="text-lg font-bold">Informations à jour</h2>
+        <p className="mt-0.5 text-sm text-pierre">Alimente l&apos;annuaire.</p>
 
         <form action={enregistrer} className="mt-5 grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite">
             Nom commercial
             <input name="nomCommercial" defaultValue={org.nomCommercial ?? ""} className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite">
             Localisation
             <input
               name="localisation"
@@ -116,16 +111,16 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite sm:col-span-2">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite sm:col-span-2">
             Adresse complète du siège
             <input name="adresseSiege" defaultValue={org.adresseSiege ?? ""} className={champ} />
           </label>
 
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite">
             Téléphone
             <input name="telephone" defaultValue={org.telephone ?? ""} className={champ} />
           </label>
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite">
             E-mail officiel
             <input
               name="emailOfficiel"
@@ -135,7 +130,7 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite">
             Site internet
             <input
               name="siteInternet"
@@ -145,7 +140,7 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
               className={champ}
             />
           </label>
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite">
             Page LinkedIn
             <input
               name="linkedin"
@@ -156,7 +151,7 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite sm:col-span-2">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite sm:col-span-2">
             Description
             <span className="font-normal text-pierre">
               Une présentation courte — c&apos;est elle qui apparaît dans l&apos;annuaire.
@@ -169,7 +164,7 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-[13px] font-semibold text-graphite sm:col-span-2">
+          <label className="flex flex-col gap-1 text-base font-bold text-graphite sm:col-span-2">
             Secteurs <span className="font-normal text-pierre">(séparés par des virgules)</span>
             <input
               name="secteurs"

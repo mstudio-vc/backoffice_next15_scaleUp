@@ -1,8 +1,9 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { documents } from "@/db/schema";
-import { EntetePage, Vide } from "@/components/page-entete";
+import { CarteTable, EntetePage, TD, TH, TR, Vide } from "@/components/page-entete";
 import { CATEGORIE_DOCUMENT, VISIBILITE_DOCUMENT } from "@/lib/vocabulaire";
+import { Pilule } from "@/components/badge";
 
 function poids(octets: number | null): string {
   if (!octets) return "—";
@@ -29,33 +30,32 @@ export async function DocumentsLaureat({
     <>
       <EntetePage
         titre="Documents"
-        description="Vos pièces justificatives et vos présentations. Redéposer sous le même titre crée une version, sans rien effacer."
+        etat={`${lignes.length} document${lignes.length > 1 ? "s" : ""}`}
         action={{ href: `${base}/nouveau`, label: "Déposer un document" }}
       />
 
       {lignes.length === 0 ? (
         <Vide
-          texte="Aucun document déposé."
+          titre="Aucun document"
           action={{ href: `${base}/nouveau`, label: "Déposer le premier" }}
         />
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-vert/10">
-          <table className="w-full min-w-[48rem] text-sm">
-            <thead className="border-b border-vert/10 text-left text-[11px] tracking-wide text-pierre uppercase">
+        <CarteTable>
+            <thead>
               <tr>
-                <th className="px-5 py-3">Document</th>
-                <th className="px-5 py-3">Catégorie</th>
-                <th className="px-5 py-3">Version</th>
-                <th className="px-5 py-3">Déposé</th>
-                <th className="px-5 py-3">Qui le voit</th>
+                <th className={TH}>Document</th>
+                <th className={TH}>Catégorie</th>
+                <th className={TH}>Version</th>
+                <th className={TH}>Déposé</th>
+                <th className={TH}>Qui le voit</th>
               </tr>
             </thead>
             <tbody>
               {lignes.map((d) => (
-                <tr key={d.id} className="border-b border-vert/5 last:border-0 hover:bg-papier/60">
-                  <td className="px-5 py-3.5">
-                    <span className="font-medium text-encre">{d.titre}</span>
-                    <span className="block text-xs text-pierre">
+                <tr key={d.id} className={TR}>
+                  <td className={TD}>
+                    <span className="font-normal text-encre">{d.titre}</span>
+                    <span className="block text-sm text-pierre">
                       {d.lien ? (
                         <a href={d.lien} target="_blank" rel="noopener noreferrer" className="text-vert hover:underline">
                           Ouvrir le lien
@@ -70,19 +70,18 @@ export async function DocumentsLaureat({
                       )}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-ardoise">{CATEGORIE_DOCUMENT[d.categorie]}</td>
+                  <td className={`${TD} text-ardoise`}>{CATEGORIE_DOCUMENT[d.categorie]}</td>
                   <td className="px-5 py-3.5 text-ardoise tabular-nums">v{d.version}</td>
-                  <td className="px-5 py-3.5 text-ardoise">{d.deposeLe.toLocaleDateString("fr-FR")}</td>
-                  <td className="px-5 py-3.5">
-                    <span className="rounded-full bg-papier px-2.5 py-1 text-xs font-medium text-ardoise">
+                  <td className={`${TD} text-ardoise`}>{d.deposeLe.toLocaleDateString("fr-FR")}</td>
+                  <td className={TD}>
+                    <Pilule>
                       {VISIBILITE_DOCUMENT[d.visibilite]}
-                    </span>
+                    </Pilule>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+        </CarteTable>
       )}
     </>
   );

@@ -3,6 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { demandesOffres, journal, offres, organisations } from "@/db/schema";
 import { exigerSession } from "@/lib/garde";
+import { Pilule } from "@/components/badge";
 import {
   CATEGORIE_OFFRE,
   CIBLE_OFFRE,
@@ -73,35 +74,35 @@ export async function OffresLaureat({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Offres des partenaires</h1>
+      <h1 className="text-xl font-bold">Offres des partenaires</h1>
       {lignes.map(({ offre, partenaire, demandeStatut }) => (
-        <article key={offre.id} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-            <span className="rounded-full bg-feuille/10 px-2.5 py-1 text-vert">
+        <article key={offre.id} className="rounded bg-white p-5 ring-1 ring-brume">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-normal">
+            <Pilule>
               {CATEGORIE_OFFRE[offre.categorie]}
-            </span>
-            <span className="rounded-full bg-papier px-2.5 py-1 text-ardoise">
+            </Pilule>
+            <Pilule>
               {CIBLE_OFFRE[offre.cible]}
-            </span>
+            </Pilule>
             {offre.valideJusquAu ? (
               <span className="text-pierre">
                 jusqu&apos;au {new Date(offre.valideJusquAu).toLocaleDateString("fr-FR")}
               </span>
             ) : null}
           </div>
-          <h2 className="mt-2 font-semibold">{offre.titre}</h2>
+          <h2 className="mt-2 font-bold">{offre.titre}</h2>
           <p className="text-sm text-pierre">{partenaire}</p>
           <p className="mt-2 text-sm whitespace-pre-line text-graphite">{offre.description}</p>
 
           <div className="mt-4">
             {demandeStatut ? (
-              <span className="inline-block rounded-lg bg-papier px-3 py-1.5 text-sm font-medium text-ardoise">
+              <span className="inline-block rounded bg-papier px-3 py-1.5 text-sm font-normal text-ardoise">
                 Demande {STATUT_DEMANDE[demandeStatut].toLowerCase()}
               </span>
             ) : (
               <form action={demander}>
                 <input type="hidden" name="offreId" value={offre.id} />
-                <button className="rounded-lg bg-vert px-4 py-2 text-sm font-semibold text-white hover:bg-vert-mid">
+                <button className="rounded bg-vert px-4 py-2 text-sm font-bold text-white hover:bg-vert-mid">
                   Demander cette offre
                 </button>
               </form>
@@ -110,7 +111,7 @@ export async function OffresLaureat({
         </article>
       ))}
       {lignes.length === 0 ? (
-        <p className="rounded-2xl bg-white p-6 text-center text-pierre shadow-sm ring-1 ring-vert/10">
+        <p className="rounded bg-white p-6 text-center text-pierre ring-1 ring-brume">
           Aucune offre publiée pour le moment.
         </p>
       ) : null}

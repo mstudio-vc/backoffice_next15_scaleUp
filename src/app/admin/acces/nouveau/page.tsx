@@ -50,21 +50,18 @@ export default async function NouvelAcces() {
   }
 
   const champSelect =
-    "h-11 rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10";
+    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
   return (
     <>
       <Retour href="/admin/acces" label="Accès" />
-      <h1 className="mb-1 text-2xl font-semibold text-encre">Ouvrir un accès</h1>
-      <p className="mb-6 max-w-2xl text-[15px] text-ardoise">
-        Le compte est créé et un lien part par courriel. Vous ne choisissez pas le mot de passe :
-        la personne le définit elle-même. C&apos;est la seule façon de rendre une connexion
-        réellement imputable.
-      </p>
+      {/* Pourquoi on ne choisit pas le mot de passe à la place de la personne : c'est la seule
+          façon de rendre une connexion imputable. La raison vit ici, pas dans l'écran. */}
+      <h1 className="mb-4 text-2xl font-bold text-encre">Ouvrir un accès</h1>
 
       <CarteFormulaire>
         {orgs.length === 0 ? (
-          <p className="rounded-xl border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
+          <p className="rounded border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
             Aucune organisation en base. Importez d&apos;abord les lauréats, ou ajoutez un
             partenaire depuis Organisations.
           </p>
@@ -75,7 +72,7 @@ export default async function NouvelAcces() {
           <Champ label="Nom et prénoms" name="nom" placeholder="facultatif" />
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">Type de compte</span>
+            <span className="text-base font-bold text-graphite">Type de compte</span>
             <select name="role" className={champSelect}>
               <option value="membre">Membre d&apos;une organisation</option>
               <option value="root">Administration du programme</option>
@@ -83,7 +80,7 @@ export default async function NouvelAcces() {
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">Organisation</span>
+            <span className="text-base font-bold text-graphite">Organisation</span>
             <select name="organisationId" className={champSelect}>
               <option value="">— aucune (compte d&apos;administration) —</option>
               {orgs.map((o) => (

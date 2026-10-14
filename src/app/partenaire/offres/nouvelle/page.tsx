@@ -46,13 +46,13 @@ export default async function NouvelleOffre() {
   }
 
   const champSelect =
-    "h-11 rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10";
+    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
   return (
     <>
       <Retour href="/partenaire/offres" label="Mes offres" />
-      <h1 className="mb-1 text-2xl font-semibold text-encre">Publier une offre</h1>
-      <p className="mb-6 max-w-2xl text-[15px] text-ardoise">
+      <h1 className="mb-1 text-2xl font-bold text-encre">Publier une offre</h1>
+      <p className="mb-6 max-w-2xl text-base text-ardoise">
         Choisissez qui elle vise : une offre réservée aux PME n&apos;atteindra pas les startups.
       </p>
 
@@ -63,7 +63,7 @@ export default async function NouvelleOffre() {
           </div>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">Catégorie</span>
+            <span className="text-base font-bold text-graphite">Catégorie</span>
             <select name="categorie" className={champSelect}>
               {Object.entries(CATEGORIE_OFFRE).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -72,7 +72,7 @@ export default async function NouvelleOffre() {
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">Destinataires</span>
+            <span className="text-base font-bold text-graphite">Destinataires</span>
             <select name="cible" className={champSelect}>
               {Object.entries(CIBLE_OFFRE).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -84,12 +84,12 @@ export default async function NouvelleOffre() {
 
           <div className="sm:col-span-2">
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold text-graphite">Description</span>
+              <span className="text-base font-bold text-graphite">Description</span>
               <textarea
                 name="description"
                 rows={5}
                 required
-                className="rounded-xl border border-brume bg-white p-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10"
+                className="rounded border border-brume bg-white p-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume"
               />
             </label>
           </div>

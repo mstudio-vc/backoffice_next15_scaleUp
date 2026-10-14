@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
 import { documents, journal } from "@/db/schema";
 import { exigerSession } from "@/lib/garde";
@@ -67,13 +67,13 @@ export async function DepotDocument({ base }: { base: string }) {
   }
 
   const champSelect =
-    "h-11 rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10";
+    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
   return (
     <>
       <Retour href={base} label="Documents" />
-      <h1 className="mb-1 text-2xl font-semibold text-encre">Déposer un document</h1>
-      <p className="mb-6 max-w-2xl text-[15px] text-ardoise">
+      <h1 className="mb-1 text-2xl font-bold text-encre">Déposer un document</h1>
+      <p className="mb-6 max-w-2xl text-base text-ardoise">
         Un fichier de {TAILLE_MAX / 1024 / 1024} Mo au plus, ou un lien vers un document en
         ligne. Redéposer sous un titre déjà utilisé crée une nouvelle version : rien n&apos;est
         effacé.
@@ -84,7 +84,7 @@ export async function DepotDocument({ base }: { base: string }) {
           <Champ label="Titre" name="titre" required placeholder="États financiers 2025" />
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">Catégorie</span>
+            <span className="text-base font-bold text-graphite">Catégorie</span>
             <select name="categorie" className={champSelect}>
               {Object.entries(CATEGORIE_DOCUMENT).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -93,11 +93,11 @@ export async function DepotDocument({ base }: { base: string }) {
           </label>
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
-            <span className="text-[13px] font-semibold text-graphite">Fichier</span>
+            <span className="text-base font-bold text-graphite">Fichier</span>
             <input
               type="file"
               name="fichier"
-              className="rounded-xl border border-brume bg-white p-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-papier file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-graphite"
+              className="rounded border border-brume bg-white p-2.5 text-sm file:mr-3 file:rounded file:border-0 file:bg-papier file:px-3 file:py-1.5 file:text-sm file:font-normal file:text-graphite"
             />
             <span className="text-xs text-pierre">PDF, présentation, tableur, image.</span>
           </label>
@@ -113,7 +113,7 @@ export async function DepotDocument({ base }: { base: string }) {
           </div>
 
           <label className="flex flex-col gap-1.5 sm:col-span-2">
-            <span className="text-[13px] font-semibold text-graphite">Qui le voit</span>
+            <span className="text-base font-bold text-graphite">Qui le voit</span>
             <select name="visibilite" className={champSelect}>
               {Object.entries(VISIBILITE_DOCUMENT).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>

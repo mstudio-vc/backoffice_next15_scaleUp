@@ -35,12 +35,11 @@ export default async function DefinirMotDePasse({
   if (!invitation) {
     return (
       <>
-        <span className="grid size-11 place-items-center rounded-xl bg-orange/10 text-xl text-orange-sombre">!</span>
+        <span className="grid size-11 place-items-center rounded bg-orange/10 text-xl text-orange-sombre">!</span>
         <div>
-          <h2 className="text-2xl font-semibold text-encre">Ce lien n&apos;est plus valable</h2>
-          <p className="mt-1 text-[15px] leading-relaxed text-ardoise">
-            Un lien de définition de mot de passe ne sert qu&apos;une fois et expire au bout de
-            quelques heures. Demandez-en un nouveau à l&apos;administration du programme.
+          <h2 className="text-2xl font-bold text-encre">Ce lien n&apos;est plus valable</h2>
+          <p className="mt-1 text-base text-ardoise">
+            Il ne sert qu&apos;une fois. Demandez-en un nouveau à l&apos;administration.
           </p>
         </div>
       </>
@@ -76,14 +75,14 @@ export default async function DefinirMotDePasse({
   return (
     <>
       <div>
-        <h2 className="text-2xl font-semibold text-encre">Choisissez votre mot de passe</h2>
-        <p className="mt-1 text-[15px] text-ardoise">
+        <h2 className="text-2xl font-bold text-encre">Choisissez votre mot de passe</h2>
+        <p className="mt-1 text-base text-ardoise">
           {LONGUEUR_MIN} caractères au moins, dont une majuscule, une minuscule et un chiffre.
         </p>
       </div>
 
       {erreur ? (
-        <p className="rounded-xl border border-orange/30 bg-orange/10 px-3.5 py-3 text-sm text-orange-sombre">
+        <p className="rounded border border-orange/30 bg-orange/10 px-3.5 py-3 text-sm text-orange-sombre">
           Mot de passe trop faible, ou confirmation différente.
         </p>
       ) : null}

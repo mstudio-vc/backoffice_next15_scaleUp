@@ -5,6 +5,7 @@ import { journal, offres } from "@/db/schema";
 import { exigerPartenaire } from "@/lib/garde";
 import { EntetePage, Vide } from "@/components/page-entete";
 import { CATEGORIE_OFFRE, CIBLE_OFFRE } from "@/lib/vocabulaire";
+import { Pilule } from "@/components/badge";
 
 /** Les offres du partenaire connecté. La publication vit sur sa propre route. */
 export default async function PartenaireOffres() {
@@ -43,7 +44,9 @@ export default async function PartenaireOffres() {
     <>
       <EntetePage
         titre="Mes offres"
-        description="Elles deviennent visibles par les lauréats que vous ciblez, une fois votre compte validé."
+        etat={`${lignes.length} offre${lignes.length > 1 ? "s" : ""} · ${
+          lignes.filter((o) => o.statut === "publiee").length
+        } publiée${lignes.filter((o) => o.statut === "publiee").length > 1 ? "s" : ""}`}
         action={{ href: "/partenaire/offres/nouvelle", label: "Publier une offre" }}
       />
 
@@ -51,16 +54,16 @@ export default async function PartenaireOffres() {
         {lignes.map((o) => (
           <article
             key={o.id}
-            className="flex flex-wrap items-start gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10"
+            className="flex flex-wrap items-start gap-4 rounded bg-white p-5 ring-1 ring-brume"
           >
             <div className="min-w-0 grow">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-                <span className="rounded-full bg-feuille/10 px-2.5 py-1 text-vert">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-normal">
+                <Pilule>
                   {CATEGORIE_OFFRE[o.categorie]}
-                </span>
-                <span className="rounded-full bg-papier px-2.5 py-1 text-ardoise">
+                </Pilule>
+                <Pilule>
                   {CIBLE_OFFRE[o.cible]}
-                </span>
+                </Pilule>
                 <span className={o.statut === "publiee" ? "text-vert" : "text-pierre"}>
                   {o.statut === "publiee" ? "publiée" : "retirée"}
                 </span>
@@ -70,7 +73,7 @@ export default async function PartenaireOffres() {
                   </span>
                 ) : null}
               </div>
-              <h2 className="mt-2 font-semibold text-encre">{o.titre}</h2>
+              <h2 className="mt-2 font-bold text-encre">{o.titre}</h2>
               <p className="mt-1 text-sm whitespace-pre-line text-graphite">{o.description}</p>
             </div>
             <form action={basculer}>
@@ -78,7 +81,7 @@ export default async function PartenaireOffres() {
               <button
                 name="statut"
                 value={o.statut === "publiee" ? "retiree" : "publiee"}
-                className="shrink-0 rounded-lg border border-brume px-3 py-1.5 text-sm font-medium text-graphite transition hover:bg-papier"
+                className="shrink-0 rounded border border-brume px-3 py-1.5 text-sm font-normal text-graphite transition hover:bg-papier"
               >
                 {o.statut === "publiee" ? "Retirer" : "Republier"}
               </button>
@@ -88,7 +91,7 @@ export default async function PartenaireOffres() {
 
         {lignes.length === 0 ? (
           <Vide
-            texte="Aucune offre pour le moment."
+            titre="Aucune offre"
             action={{ href: "/partenaire/offres/nouvelle", label: "Publier une offre" }}
           />
         ) : null}

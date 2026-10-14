@@ -49,8 +49,8 @@ export async function Annuaire({
             href={f.cle === "toutes" ? base : `${base}?filtre=${f.cle}`}
             className={
               f.cle === choisi.cle
-                ? "rounded-full bg-vert px-4 py-1.5 text-sm font-semibold text-white"
-                : "rounded-full px-4 py-1.5 text-sm font-medium text-ardoise ring-1 ring-brume hover:bg-white"
+                ? "rounded bg-vert px-3 py-1 text-base font-bold text-white"
+                : "rounded bg-white px-3 py-1 text-base text-graphite ring-1 ring-brume hover:bg-papier"
             }
           >
             {f.label}
@@ -65,13 +65,13 @@ export async function Annuaire({
         {lignes.map((o) => (
           <article
             key={o.id}
-            className="flex flex-wrap items-start gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10"
+            className="flex flex-wrap items-start gap-4 rounded bg-white p-5 ring-1 ring-brume"
           >
-            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-papier text-lg font-bold text-pierre">
+            <span className="grid size-12 shrink-0 place-items-center rounded bg-papier text-lg font-bold text-pierre">
               {o.denominationSociale.trim()[0]?.toUpperCase() ?? "?"}
             </span>
             <div className="min-w-0 grow">
-              <h3 className="font-semibold">{o.denominationSociale}</h3>
+              <h3 className="font-bold">{o.denominationSociale}</h3>
               <p className="text-sm text-pierre">
                 {/* Pour un partenaire, son métier est plus parlant que le mot « partenaire ». */}
                 {o.type === "partenaire" && o.typePartenaire
@@ -86,7 +86,7 @@ export async function Annuaire({
               {o.secteurs.length > 0 ? (
                 <ul className="mt-2 flex flex-wrap gap-1.5">
                   {o.secteurs.map((s) => (
-                    <li key={s} className="rounded-full bg-feuille/10 px-2.5 py-1 text-xs font-medium text-vert">
+                    <li key={s} className="rounded bg-white px-2 py-0.5 text-sm text-graphite ring-1 ring-brume">
                       {s}
                     </li>
                   ))}
@@ -98,7 +98,7 @@ export async function Annuaire({
                 href={o.siteInternet}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium text-graphite ring-1 ring-brume hover:bg-creme"
+                className="shrink-0 rounded px-3 py-1.5 text-sm font-normal text-graphite ring-1 ring-brume hover:bg-creme"
               >
                 Site
               </a>
@@ -106,7 +106,7 @@ export async function Annuaire({
           </article>
         ))}
         {lignes.length === 0 ? (
-          <p className="rounded-2xl bg-white p-6 text-center text-pierre shadow-sm ring-1 ring-vert/10">
+          <p className="rounded bg-white p-6 text-center text-pierre ring-1 ring-brume">
             Aucune organisation dans cette vue.
           </p>
         ) : null}

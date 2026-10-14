@@ -6,8 +6,9 @@ import { demandesOffres, journal, offres, organisations, utilisateurs } from "@/
 import { envoyer } from "@/lib/courriel/envoi";
 import { reponseDemande } from "@/lib/courriel/modeles";
 import { exigerRoot } from "@/lib/garde";
+import { Badge } from "@/components/badge";
 import { Retour, Vide } from "@/components/page-entete";
-import { STATUT_DEMANDE } from "@/lib/vocabulaire";
+import { STATUT_DEMANDE, TON_STATUT_DEMANDE } from "@/lib/vocabulaire";
 
 // Répondre aux demandes est un travail distinct de la publication des offres : il a sa page.
 export default async function Demandes() {
@@ -77,28 +78,27 @@ export default async function Demandes() {
   return (
     <>
       <Retour href="/admin/offres" label="Offres" />
-      <h1 className="mb-1 text-2xl font-semibold text-encre">Demandes des lauréats</h1>
-      <p className="mb-6 max-w-2xl text-[15px] text-ardoise">
-        Les partenaires n&apos;ont pas d&apos;espace à eux : l&apos;administration répond pour
-        leur compte, après accord du partenaire concerné.
+      <h1 className="text-2xl font-bold text-encre">Demandes des lauréats</h1>
+      <p className="mt-0.5 mb-4 text-sm text-pierre">
+        {attente.length} à traiter · {traitees.length} traitée{traitees.length > 1 ? "s" : ""}
       </p>
 
       {demandes.length === 0 ? (
-        <Vide texte="Aucune demande pour le moment." />
+        <Vide titre="Aucune demande" />
       ) : (
         <div className="flex flex-col gap-6">
           {attente.length > 0 ? (
             <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-semibold tracking-wide text-pierre uppercase">
+              <h2 className="text-sm font-bold tracking-wide text-pierre uppercase">
                 À traiter ({attente.length})
               </h2>
               {attente.map((d) => (
                 <div
                   key={d.id}
-                  className="flex flex-wrap items-center gap-3 rounded-2xl border-l-4 border-orange bg-white p-4 shadow-sm ring-1 ring-vert/10"
+                  className="flex flex-wrap items-center gap-3 rounded border-l-4 border-orange bg-white p-4 ring-1 ring-brume"
                 >
                   <div className="min-w-0 grow">
-                    <p className="font-medium text-encre">{d.demandeur}</p>
+                    <p className="font-normal text-encre">{d.demandeur}</p>
                     <p className="text-sm text-pierre">
                       {d.offre} · {d.partenaire} · {d.creeLe.toLocaleDateString("fr-FR")}
                     </p>
@@ -108,14 +108,14 @@ export default async function Demandes() {
                     <button
                       name="statut"
                       value="acceptee"
-                      className="rounded-lg bg-vert px-3.5 py-2 text-sm font-semibold text-white hover:bg-vert-mid"
+                      className="rounded bg-vert px-3.5 py-2 text-sm font-bold text-white hover:bg-vert-mid"
                     >
                       Accepter
                     </button>
                     <button
                       name="statut"
                       value="refusee"
-                      className="rounded-lg border border-brume px-3.5 py-2 text-sm font-medium text-graphite hover:bg-papier"
+                      className="rounded border border-brume px-3.5 py-2 text-sm font-normal text-graphite hover:bg-papier"
                     >
                       Refuser
                     </button>
@@ -127,25 +127,19 @@ export default async function Demandes() {
 
           {traitees.length > 0 ? (
             <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-semibold tracking-wide text-pierre uppercase">Traitées</h2>
+              <h2 className="text-sm font-bold tracking-wide text-pierre uppercase">Traitées</h2>
               {traitees.map((d) => (
                 <div
                   key={d.id}
-                  className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-vert/10"
+                  className="flex flex-wrap items-center gap-3 rounded bg-white p-4 ring-1 ring-brume"
                 >
                   <div className="min-w-0 grow">
-                    <p className="font-medium text-encre">{d.demandeur}</p>
+                    <p className="font-normal text-encre">{d.demandeur}</p>
                     <p className="text-sm text-pierre">
                       {d.offre} · {d.partenaire}
                     </p>
                   </div>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      d.statut === "acceptee" ? "bg-feuille/15 text-vert" : "bg-papier text-pierre"
-                    }`}
-                  >
-                    {STATUT_DEMANDE[d.statut]}
-                  </span>
+                  <Badge ton={TON_STATUT_DEMANDE[d.statut]}>{STATUT_DEMANDE[d.statut]}</Badge>
                 </div>
               ))}
             </section>

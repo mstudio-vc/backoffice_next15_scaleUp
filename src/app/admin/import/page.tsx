@@ -6,7 +6,7 @@ import { db } from "@/db/client";
 import { journal } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
 import { CarteFormulaire, Retour } from "@/components/page-entete";
-import { BOUTON } from "@/components/champ";
+import { BOUTON, Libelle } from "@/components/champ";
 import { appliquerImport, type EtatImport } from "./appliquer";
 
 export default async function Import({
@@ -45,24 +45,22 @@ export default async function Import({
   return (
     <>
       <Retour href="/admin/organisations" label="Organisations" />
-      <h1 className="mb-1 text-2xl font-semibold text-encre">Importer des lauréats</h1>
-      <p className="mb-6 max-w-2xl text-[15px] text-ardoise">
-        Déposez les exports Jotform des deux programmes. Les entreprises arrivent en attente de
-        validation : elles n&apos;apparaissent dans l&apos;annuaire qu&apos;une fois validées.
-      </p>
+      {/* Les entreprises importées arrivent en attente : elles n'apparaissent dans l'annuaire
+          qu'une fois validées depuis /admin/organisations. */}
+      <h1 className="mb-4 text-2xl font-bold text-encre">Importer des lauréats</h1>
 
       {etat ? (
         <div
-          className={`mb-6 max-w-2xl rounded-xl border-l-4 p-4 ${
+          className={`mb-4 max-w-2xl rounded border-l-4 p-3 ${
             etat.ok ? "border-vert bg-feuille/5" : "border-orange bg-orange/5"
           }`}
         >
-          <p className="font-semibold text-encre">{etat.resume}</p>
+          <p className="font-bold text-encre">{etat.resume}</p>
           <p className="mt-0.5 text-xs text-pierre">{trace?.cible}</p>
           {etat.lignes.length > 0 ? (
             <ul className="mt-2 flex flex-col gap-1">
               {etat.lignes.map((l) => (
-                <li key={l} className="font-mono text-[13px] text-graphite">
+                <li key={l} className="font-mono text-base text-graphite">
                   {l}
                 </li>
               ))}
@@ -71,7 +69,7 @@ export default async function Import({
           {etat.ajoutes > 0 ? (
             <Link
               href="/admin/organisations"
-              className="mt-3 inline-block text-sm font-semibold text-vert hover:underline"
+              className="mt-3 inline-block text-sm font-bold text-vert hover:underline"
             >
               Voir les organisations à valider →
             </Link>
@@ -80,23 +78,19 @@ export default async function Import({
       ) : null}
 
       <CarteFormulaire>
-        <form action={importer} className="flex flex-col gap-5">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">
-              Exports de candidature (.xlsx)
-            </span>
+        <form action={importer} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1">
+            <Libelle obligatoire>Exports de candidature (.xlsx)</Libelle>
             <input
               type="file"
               name="fichiers"
               accept=".xlsx"
               multiple
               required
-              className="rounded-xl border border-brume bg-white p-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-papier file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-graphite"
+              className="w-full rounded border border-brume bg-white p-1.5 text-base file:mr-3 file:rounded file:border-0 file:bg-papier file:px-3 file:py-1 file:text-base file:text-graphite"
             />
-            <span className="text-xs text-pierre">
-              Les deux programmes peuvent être envoyés ensemble, dans un seul classeur à deux
-              feuilles ou dans deux fichiers. Chaque feuille est reconnue au nombre de colonnes,
-              pas au nom du fichier.
+            <span className="text-sm text-pierre">
+              Les deux programmes ensemble. Réimporter ne crée pas de doublon.
             </span>
           </label>
 
@@ -106,18 +100,6 @@ export default async function Import({
         </form>
       </CarteFormulaire>
 
-      <div className="mt-6 max-w-2xl rounded-xl border-l-4 border-vert/30 bg-white/60 p-4 text-sm text-graphite">
-        <p className="font-semibold">Deux garanties</p>
-        <p className="mt-1.5">
-          <b>Rejouable.</b> Une candidature déjà en base est reconnue et ignorée. Réimporter le
-          même fichier ne crée pas de doublon — vous pouvez recommencer sans crainte.
-        </p>
-        <p className="mt-1.5">
-          <b>Le fichier n&apos;est pas conservé.</b> Il est lu en mémoire puis oublié. Un export
-          de candidature porte les coordonnées et les pièces des dirigeants : il n&apos;a rien à
-          faire sur le disque du serveur.
-        </p>
-      </div>
     </>
   );
 }

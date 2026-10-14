@@ -6,6 +6,7 @@ import { demandesOffres, journal, offres, organisations } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
 import { EntetePage, Vide } from "@/components/page-entete";
 import { CATEGORIE_OFFRE, CIBLE_OFFRE } from "@/lib/vocabulaire";
+import { Badge, Pilule } from "@/components/badge";
 
 export default async function AdminOffres() {
   await exigerRoot();
@@ -46,28 +47,25 @@ export default async function AdminOffres() {
     <>
       <EntetePage
         titre="Offres"
-        description="Les avantages négociés auprès des partenaires, proposés aux lauréats."
+        etat={`${lignes.length} offre${lignes.length > 1 ? "s" : ""} · ${Number(attente.n)} demande${
+          Number(attente.n) > 1 ? "s" : ""
+        } en attente`}
         action={{ href: "/admin/offres/nouvelle", label: "Publier une offre" }}
       />
 
+      {/* Le chiffre est déjà dans la ligne d'état : il ne lui faut qu'un chemin, pas un encart. */}
       {Number(attente.n) > 0 ? (
         <Link
           href="/admin/offres/demandes"
-          className="mb-6 flex items-center gap-3 rounded-2xl border-l-4 border-orange bg-orange/5 px-5 py-4 transition hover:bg-orange/10"
+          className="mb-3 inline-block text-base font-normal text-orange-sombre hover:underline"
         >
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-orange text-sm font-bold text-white">
-            {Number(attente.n)}
-          </span>
-          <span className="text-[15px] font-medium text-graphite">
-            demande{Number(attente.n) > 1 ? "s" : ""} de lauréats en attente de réponse
-          </span>
-          <span className="ml-auto text-sm font-semibold text-orange-sombre">Traiter →</span>
+          Traiter les {Number(attente.n)} demande{Number(attente.n) > 1 ? "s" : ""} →
         </Link>
       ) : null}
 
       {lignes.length === 0 ? (
         <Vide
-          texte="Aucune offre publiée."
+          titre="Aucune offre publiée"
           action={{ href: "/admin/offres/nouvelle", label: "Publier la première" }}
         />
       ) : (
@@ -75,29 +73,27 @@ export default async function AdminOffres() {
           {lignes.map(({ offre, partenaire, demandes }) => (
             <article
               key={offre.id}
-              className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-vert/10"
+              className="flex flex-col rounded bg-white p-5 ring-1 ring-brume"
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-                <span className="rounded-full bg-feuille/10 px-2.5 py-1 text-vert">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-normal">
+                <Pilule>
                   {CATEGORIE_OFFRE[offre.categorie]}
-                </span>
-                <span className="rounded-full bg-papier px-2.5 py-1 text-ardoise">
+                </Pilule>
+                <Pilule>
                   {CIBLE_OFFRE[offre.cible]}
-                </span>
-                <span
-                  className={`ml-auto rounded-full px-2.5 py-1 ${
-                    offre.statut === "publiee" ? "bg-vert/10 text-vert" : "bg-papier text-pierre"
-                  }`}
-                >
-                  {offre.statut === "publiee" ? "publiée" : "retirée"}
+                </Pilule>
+                <span className="ml-auto">
+                  <Badge ton={offre.statut === "publiee" ? "succes" : "inactif"}>
+                    {offre.statut === "publiee" ? "Publiée" : "Retirée"}
+                  </Badge>
                 </span>
               </div>
 
-              <h2 className="mt-3 font-semibold text-encre">{offre.titre}</h2>
+              <h2 className="mt-3 font-bold text-encre">{offre.titre}</h2>
               <p className="text-sm text-pierre">{partenaire}</p>
               <p className="mt-2 line-clamp-3 text-sm text-ardoise">{offre.description}</p>
 
-              <div className="mt-4 flex items-center gap-3 border-t border-vert/10 pt-3">
+              <div className="mt-4 flex items-center gap-3 border-t border-brume pt-3">
                 <span className="text-sm text-pierre">
                   {Number(demandes)} demande{Number(demandes) > 1 ? "s" : ""}
                   {offre.valideJusquAu
@@ -107,7 +103,7 @@ export default async function AdminOffres() {
                 <form action={basculer} className="ml-auto">
                   <input type="hidden" name="offreId" value={offre.id} />
                   <input type="hidden" name="vers" value={offre.statut === "publiee" ? "retiree" : "publiee"} />
-                  <button className="rounded-lg border border-brume px-3 py-1.5 text-sm font-medium text-graphite transition hover:bg-papier">
+                  <button className="rounded border border-brume px-3 py-1.5 text-sm font-normal text-graphite transition hover:bg-papier">
                     {offre.statut === "publiee" ? "Retirer" : "Republier"}
                   </button>
                 </form>

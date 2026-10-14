@@ -5,7 +5,13 @@ import { journal, organisations } from "@/db/schema";
 import { exigerPartenaire } from "@/lib/garde";
 import { Champ, BOUTON } from "@/components/champ";
 import { EntetePage } from "@/components/page-entete";
-import { TYPE_PARTENAIRE, type TypePartenaire } from "@/lib/vocabulaire";
+import { Badge } from "@/components/badge";
+import {
+  STATUT_ORGANISATION,
+  TON_STATUT_ORGANISATION,
+  TYPE_PARTENAIRE,
+  type TypePartenaire,
+} from "@/lib/vocabulaire";
 
 /**
  * Le profil d'un partenaire.
@@ -61,26 +67,25 @@ export default async function PartenaireProfil() {
   }
 
   const champSelect =
-    "h-11 rounded-xl border border-brume bg-white px-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10";
+    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
   return (
     <>
-      <EntetePage
-        titre={org.denominationSociale}
-        description="Ce que vous renseignez ici alimente l'annuaire, consulté par les lauréats des deux programmes."
-      />
+      <EntetePage titre={org.denominationSociale} etat="Profil visible dans l'annuaire" />
 
       {org.statut !== "validee" ? (
-        <p className="mb-6 rounded-xl border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
-          Tant que le Ministère n&apos;a pas validé votre compte, vos offres ne sont pas visibles
-          par les lauréats et vous n&apos;apparaissez pas dans l&apos;annuaire.
+        <p className="mb-4 flex items-center gap-2 text-base text-graphite">
+          <Badge ton={TON_STATUT_ORGANISATION[org.statut]}>
+            {STATUT_ORGANISATION[org.statut]}
+          </Badge>
+          Vos offres et votre fiche ne sont pas encore visibles.
         </p>
       ) : null}
 
-      <div className="max-w-3xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-vert/10 md:p-8">
+      <div className="max-w-3xl rounded bg-white p-6 ring-1 ring-brume md:p-8">
         <form action={enregistrer} className="grid gap-5 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-graphite">Métier</span>
+            <span className="text-base font-bold text-graphite">Métier</span>
             <select
               name="typePartenaire"
               defaultValue={org.typePartenaire ?? "autre"}
@@ -100,12 +105,12 @@ export default async function PartenaireProfil() {
 
           <div className="sm:col-span-2">
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold text-graphite">Description</span>
+              <span className="text-base font-bold text-graphite">Description</span>
               <textarea
                 name="description"
                 rows={3}
                 defaultValue={org.description ?? ""}
-                className="rounded-xl border border-brume bg-white p-3.5 text-[15px] text-encre outline-none focus:border-vert focus:ring-4 focus:ring-vert/10"
+                className="rounded border border-brume bg-white p-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume"
               />
               <span className="text-xs text-pierre">Une phrase, affichée dans l&apos;annuaire.</span>
             </label>
