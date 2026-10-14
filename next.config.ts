@@ -13,6 +13,13 @@ const nextConfig: NextConfig = {
     "*": ["./data/**", "./scripts/**", "./deploiement/**", "./drizzle/meta/**"],
   },
 
+  experimental: {
+    // L'écran d'import envoie le classeur par une action de serveur, dont le corps est
+    // limité à 1 Mo par défaut. Les exports connus pèsent 180 et 340 Ko ; on laisse de la
+    // marge pour une promotion plus nombreuse sans avoir à y revenir en urgence.
+    serverActions: { bodySizeLimit: "12mb" },
+  },
+
   async headers() {
     return [
       {
