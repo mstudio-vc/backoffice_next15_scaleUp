@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
+import { desc, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { organisations } from "@/db/schema";
+import { candidatures, organisations } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
 import { Badge } from "@/components/badge";
 import { CarteTable, EntetePage, TD, TH, TR, Vide } from "@/components/page-entete";
 import {
+  PROGRAMME,
   STATUT_ORGANISATION,
   TON_STATUT_ORGANISATION,
   TYPE_ORGANISATION,
@@ -23,8 +24,48 @@ import {
  */
 const VUES = [
   { cle: "a-traiter", label: "À traiter" },
+  { cle: "doublons", label: "Doublons" },
   { cle: "toutes", label: "Toutes" },
 ] as const;
+
+/** Pour rapprocher « Recruterra » et « Recruterra SARL », ou deux fois la même raison sociale. */
+const cle = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+/**
+ * Les organisations qui désignent probablement la même entreprise.
+ *
+ * L'import crée une organisation PAR CANDIDATURE, et c'est voulu : deux dépôts sont deux
+ * dossiers, et les fondre perdrait une candidature réelle. Mais une entreprise qui a déposé
+ * trois fois — Thelema l'a fait, dont une fois dans l'autre programme — apparaît trois fois
+ * dans l'annuaire, et un accès ouvert sur son courriel heurterait l'unicité de `utilisateurs`.
+ *
+ * Le rapprochement se fait sur le courriel officiel OU la raison sociale normalisée. Il est
+ * indicatif : c'est l'administration qui tranche, en refusant les dossiers surnuméraires.
+ */
+function grouper(lignes: (typeof organisations.$inferSelect)[]) {
+  const paquets = new Map<string, typeof lignes>();
+  for (const o of lignes) {
+    for (const k of [
+      o.emailOfficiel ? `courriel:${o.emailOfficiel.trim().toLowerCase()}` : null,
+      `nom:${cle(o.denominationSociale)}`,
+    ]) {
+      if (!k) continue;
+      const p = paquets.get(k) ?? [];
+      if (!p.some((x) => x.id === o.id)) p.push(o);
+      paquets.set(k, p);
+    }
+  }
+  // Une organisation déjà rapprochée par son courriel n'est pas re-listée par son nom.
+  const vus = new Set<string>();
+  const groupes: { cle: string; membres: typeof lignes }[] = [];
+  for (const [k, membres] of paquets) {
+    if (membres.length < 2) continue;
+    if (membres.every((m) => vus.has(m.id))) continue;
+    membres.forEach((m) => vus.add(m.id));
+    groupes.push({ cle: k.split(":").slice(1).join(":"), membres });
+  }
+  return groupes.sort((a, b) => b.membres.length - a.membres.length);
+}
 
 export default async function AdminOrganisations({
   searchParams,
@@ -37,7 +78,26 @@ export default async function AdminOrganisations({
 
   const toutes = await db.select().from(organisations).orderBy(desc(organisations.creeLe));
   const enAttente = toutes.filter((o) => o.statut === "en_attente");
+  const groupes = grouper(toutes);
   const lignes = active.cle === "a-traiter" ? enAttente : toutes;
+
+  // Le programme et la date de dépôt : c'est ce qui permet de décider lequel garder.
+  const dossiers =
+    active.cle === "doublons" && groupes.length > 0
+      ? await db
+          .select({
+            organisationId: candidatures.organisationId,
+            programme: candidatures.programme,
+            deposeeLe: candidatures.deposeeLe,
+          })
+          .from(candidatures)
+          .where(
+            inArray(
+              candidatures.organisationId,
+              groupes.flatMap((g) => g.membres.map((m) => m.id)),
+            ),
+          )
+      : [];
 
   return (
     <>
@@ -60,13 +120,61 @@ export default async function AdminOrganisations({
           >
             {v.label}
             <span className="ml-1.5 opacity-70">
-              {v.cle === "a-traiter" ? enAttente.length : toutes.length}
+              {v.cle === "a-traiter"
+                ? enAttente.length
+                : v.cle === "doublons"
+                  ? groupes.length
+                  : toutes.length}
             </span>
           </Link>
         ))}
       </div>
 
-      {lignes.length === 0 ? (
+      {active.cle === "doublons" ? (
+        groupes.length === 0 ? (
+          <Vide titre="Aucun doublon repéré" texte="Chaque organisation est unique." />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {groupes.map((g) => (
+              <section key={g.cle} className="rounded bg-white p-3 ring-1 ring-brume">
+                <p className="mb-2 text-sm text-pierre">
+                  {g.membres.length} dossiers · {g.cle}
+                </p>
+                <ul className="flex flex-col gap-1.5">
+                  {g.membres.map((m) => {
+                    const ds = dossiers.filter((d) => d.organisationId === m.id);
+                    return (
+                      <li key={m.id} className="flex flex-wrap items-center gap-2 border-t border-brume/60 pt-1.5">
+                        <Link
+                          href={`/admin/organisations/${m.id}`}
+                          className="font-bold text-vert hover:underline"
+                        >
+                          {m.denominationSociale}
+                        </Link>
+                        <span className="text-sm text-pierre">
+                          {ds
+                            .map(
+                              (d) =>
+                                `${PROGRAMME[d.programme]}${
+                                  d.deposeeLe ? ` · ${d.deposeeLe.toLocaleDateString("fr-FR")}` : ""
+                                }`,
+                            )
+                            .join(" / ")}
+                        </span>
+                        <span className="ml-auto">
+                          <Badge ton={TON_STATUT_ORGANISATION[m.statut]}>
+                            {STATUT_ORGANISATION[m.statut]}
+                          </Badge>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )
+      ) : lignes.length === 0 ? (
         <Vide
           titre={active.cle === "a-traiter" ? "Rien à valider" : "Aucune organisation"}
           texte={
