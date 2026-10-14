@@ -3,12 +3,23 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { journal, offres, organisations } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
-import { Champ, BOUTON } from "@/components/champ";
-import { CarteFormulaire, Retour } from "@/components/page-entete";
-import { CATEGORIE_OFFRE, CIBLE_OFFRE } from "@/lib/vocabulaire";
+import { Retour } from "@/components/page-entete";
+import { FormulaireOffre } from "@/components/formulaire-offre";
+import { RefusImage, hebergeurImages, televerserImage } from "@/lib/images";
+import {
+  CATEGORIE_OFFRE,
+  CIBLE_OFFRE,
+  type CategorieOffre,
+  type CibleOffre,
+} from "@/lib/vocabulaire";
 
-export default async function NouvelleOffre() {
+export default async function NouvelleOffre({
+  searchParams,
+}: {
+  searchParams: Promise<{ erreur?: string }>;
+}) {
   await exigerRoot();
+  const { erreur } = await searchParams;
 
   const partenaires = await db
     .select({ id: organisations.id, nom: organisations.denominationSociale })
@@ -23,7 +34,32 @@ export default async function NouvelleOffre() {
     const titre = String(formData.get("titre") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
     const valide = String(formData.get("valideJusquAu") ?? "").trim();
-    if (!partenaireId || !titre || !description) return;
+
+    if (!partenaireId) redirect("/admin/offres/nouvelle?erreur=partenaire");
+    if (!titre || !description) redirect("/admin/offres/nouvelle?erreur=champs");
+
+    const categorie = formData.get("categorie") as CategorieOffre;
+    const cible = formData.get("cible") as CibleOffre;
+    // Une valeur de liste se forge : sans ce contrôle, l'insertion échouerait sur
+    // l'énumération de la base, avec une erreur illisible.
+    if (!(categorie in CATEGORIE_OFFRE) || !(cible in CIBLE_OFFRE)) {
+      redirect("/admin/offres/nouvelle?erreur=champs");
+    }
+
+    // L'image part AVANT l'insertion : si l'hébergeur la refuse, aucune offre n'est créée, et
+    // la personne retrouve son formulaire avec la raison du refus. L'inverse laisserait une
+    // offre publiée sans sa couverture, sans que personne le sache.
+    let couvertureUrl: string | null = null;
+    const fichier = formData.get("couverture");
+    if (fichier instanceof File && fichier.size > 0) {
+      try {
+        couvertureUrl = await televerserImage(fichier, "offres");
+      } catch (e) {
+        redirect(
+          `/admin/offres/nouvelle?erreur=${e instanceof RefusImage ? e.code : "envoi"}`,
+        );
+      }
+    }
 
     const [o] = await db
       .insert(offres)
@@ -31,9 +67,10 @@ export default async function NouvelleOffre() {
         partenaireId,
         titre,
         description,
-        categorie: formData.get("categorie") as keyof typeof CATEGORIE_OFFRE,
-        cible: formData.get("cible") as keyof typeof CIBLE_OFFRE,
+        categorie,
+        cible,
         valideJusquAu: valide || null,
+        couvertureUrl,
       })
       .returning({ id: offres.id });
 
@@ -41,13 +78,10 @@ export default async function NouvelleOffre() {
       utilisateurId: session.utilisateurId,
       action: "offre.publiee",
       cible: o.id,
-      details: { titre },
+      details: { titre, couverture: couvertureUrl !== null },
     });
     redirect("/admin/offres");
   }
-
-  const champSelect =
-    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
   return (
     <>
@@ -56,61 +90,13 @@ export default async function NouvelleOffre() {
           espace partenaire existera, rien ne bougera en base. */}
       <h1 className="mb-4 text-2xl font-bold text-encre">Publier une offre</h1>
 
-      <CarteFormulaire>
-        {partenaires.length === 0 ? (
-          <p className="rounded border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
-            Aucun partenaire en base. Ajoutez-en un depuis Organisations avant de publier.
-          </p>
-        ) : (
-          <form action={publier} className="grid gap-5 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-base font-bold text-graphite">Partenaire</span>
-              <select name="partenaireId" required className={champSelect}>
-                {partenaires.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nom}</option>
-                ))}
-              </select>
-            </label>
-
-            <Champ label="Titre" name="titre" required placeholder="Compte professionnel sans frais la première année" />
-
-            <label className="flex flex-col gap-1.5">
-              <span className="text-base font-bold text-graphite">Catégorie</span>
-              <select name="categorie" className={champSelect}>
-                {Object.entries(CATEGORIE_OFFRE).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1.5">
-              <span className="text-base font-bold text-graphite">Public visé</span>
-              <select name="cible" className={champSelect}>
-                {Object.entries(CIBLE_OFFRE).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1.5 sm:col-span-2">
-              <span className="text-base font-bold text-graphite">Description</span>
-              <textarea
-                name="description"
-                required
-                rows={4}
-                placeholder="Ce que le lauréat obtient concrètement, et à quelles conditions."
-                className="rounded border border-brume bg-white p-3.5 text-base text-encre outline-none placeholder:text-pierre focus:border-vert focus:ring-4 focus:ring-brume"
-              />
-            </label>
-
-            <Champ label="Valable jusqu'au" name="valideJusquAu" type="date" aide="Facultatif." />
-
-            <div className="flex items-end">
-              <button className={BOUTON}>Publier l&apos;offre</button>
-            </div>
-          </form>
-        )}
-      </CarteFormulaire>
+      <FormulaireOffre
+        action={publier}
+        retour="/admin/offres"
+        partenaires={partenaires}
+        erreur={erreur}
+        avecCouverture={hebergeurImages() === "cloudinary"}
+      />
     </>
   );
 }

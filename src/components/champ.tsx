@@ -61,6 +61,55 @@ export function Libelle({
   );
 }
 
+/** Une liste de choix. Le chevron natif est conservé : il dit que c'est une liste. */
+export function Selecteur({
+  label,
+  aide,
+  children,
+  ...props
+}: React.ComponentProps<"select"> & { label: string; aide?: string }) {
+  const id = useId();
+  const aideId = aide ? `${id}-aide` : undefined;
+  return (
+    <div className="flex flex-col gap-1">
+      <Libelle htmlFor={id} obligatoire={props.required}>
+        {label}
+      </Libelle>
+      <select id={id} aria-describedby={aideId} className={`${SAISIE} h-8`} {...props}>
+        {children}
+      </select>
+      {aide ? (
+        <span id={aideId} className="text-sm text-pierre">
+          {aide}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Une zone de texte. Elle n'a pas de hauteur fixe, d'où un composant à elle. */
+export function ZoneTexte({
+  label,
+  aide,
+  ...props
+}: React.ComponentProps<"textarea"> & { label: string; aide?: string }) {
+  const id = useId();
+  const aideId = aide ? `${id}-aide` : undefined;
+  return (
+    <div className="flex flex-col gap-1">
+      <Libelle htmlFor={id} obligatoire={props.required}>
+        {label}
+      </Libelle>
+      <textarea id={id} aria-describedby={aideId} className={`${SAISIE} py-2`} {...props} />
+      {aide ? (
+        <span id={aideId} className="text-sm text-pierre">
+          {aide}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * L'apparence d'une zone de saisie, sans la hauteur.
  *
