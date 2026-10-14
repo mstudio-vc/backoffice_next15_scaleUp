@@ -41,7 +41,17 @@ export async function OffresLaureat({
       demandesOffres,
       and(eq(demandesOffres.offreId, offres.id), eq(demandesOffres.organisationId, organisationId)),
     )
-    .where(and(eq(offres.statut, "publiee"), inArray(offres.cible, [...ciblesVisibles])))
+    // Le partenaire doit être VALIDÉ. Sans cette condition, une organisation partenaire
+    // enregistrée mais non encore validée par le Ministère poussait ses offres à tous les
+    // lauréats — alors que son propre écran lui annonce l'inverse. La validation est la porte
+    // d'entrée du marché : si elle ne ferme rien, elle ne veut rien dire.
+    .where(
+      and(
+        eq(offres.statut, "publiee"),
+        eq(organisations.statut, "validee"),
+        inArray(offres.cible, [...ciblesVisibles]),
+      ),
+    )
     .orderBy(offres.creeLe);
 
   async function demander(formData: FormData) {
@@ -55,7 +65,14 @@ export async function OffresLaureat({
     const [o] = await db
       .select({ cible: offres.cible })
       .from(offres)
-      .where(and(eq(offres.id, offreId), eq(offres.statut, "publiee")))
+      .innerJoin(organisations, eq(organisations.id, offres.partenaireId))
+      .where(
+        and(
+          eq(offres.id, offreId),
+          eq(offres.statut, "publiee"),
+          eq(organisations.statut, "validee"),
+        ),
+      )
       .limit(1);
     if (!o || !([...ciblesVisibles] as string[]).includes(o.cible)) return;
 
