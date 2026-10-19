@@ -100,6 +100,38 @@ export const STATUT_DEMANDE = {
   refusee: "Refusée",
 } as const;
 
+/**
+ * Ce que raconte une ligne de journal.
+ *
+ * Le journal affichait sa clé technique — « fiche.modifiee », « acces.ouvert ». Un registre
+ * d'activité est fait pour être relu par quelqu'un qui cherche ce qui s'est passé, pas par
+ * celui qui a écrit l'insertion. La clé reste la vérité en base ; ceci n'est que sa lecture.
+ *
+ * Le verbe est au passé et sans sujet : la colonne « Qui » le porte déjà.
+ */
+export const ACTION_JOURNAL = {
+  "acces.ouvert": "Accès ouvert",
+  "candidatures.importees": "Candidatures importées",
+  "organisation.creee": "Organisation créée",
+  "organisation.validee": "Organisation validée",
+  "organisation.refusee": "Organisation refusée",
+  "organisation.suspendue": "Organisation suspendue",
+  "fiche.modifiee": "Fiche modifiée",
+  "profil.modifie": "Profil modifié",
+  "document.depose": "Document déposé",
+  "offre.publiee": "Offre publiée",
+  "offre.retiree": "Offre retirée",
+  "offre.republiee": "Offre republiée",
+  "offre.demandee": "Offre sollicitée",
+  "demande.acceptee": "Demande acceptée",
+  "demande.refusee": "Demande refusée",
+} as const;
+
+/** Une action inconnue se lit telle quelle plutôt que de disparaître : le registre ne ment pas. */
+export function libelleAction(action: string): string {
+  return (ACTION_JOURNAL as Record<string, string>)[action] ?? action;
+}
+
 export type TypeOrganisation = keyof typeof TYPE_ORGANISATION;
 export type TypePartenaire = keyof typeof TYPE_PARTENAIRE;
 export type Programme = keyof typeof PROGRAMME;

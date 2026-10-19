@@ -16,8 +16,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/import", label: "Import" },
         { href: "/admin/offres", label: "Offres" },
         { href: "/admin/annuaire", label: "Annuaire" },
-        { href: "/admin/acces", label: "Accès" },
-        { href: "/admin/journal", label: "Journal" },
+        // « Accès » et « Journal » n'en font plus qu'un : qui peut agir et ce qui a été fait
+        // sont deux moitiés de la même question. La route /admin/journal y redirige.
+        { href: "/admin/acces", label: "Comptes" },
       ]}
     >
       {children}
