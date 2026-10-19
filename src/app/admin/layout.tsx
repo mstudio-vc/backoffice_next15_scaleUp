@@ -12,7 +12,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       role="Administration du programme"
       nav={[
         { href: "/admin", label: "Vue d'ensemble" },
-        { href: "/admin/organisations", label: "Organisations" },
+        // « Organisations » ne disait pas de qui il s'agissait. Ce sont les entreprises qui ont
+        // postulé au programme : ce sont des lauréats, et c'est ainsi qu'on en parle.
+        { href: "/admin/organisations", label: "Lauréats" },
         { href: "/admin/import", label: "Import" },
         { href: "/admin/offres", label: "Offres" },
         { href: "/admin/annuaire", label: "Annuaire" },

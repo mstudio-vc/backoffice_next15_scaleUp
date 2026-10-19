@@ -81,10 +81,10 @@ function grouper(lignes: (typeof organisations.$inferSelect)[]) {
 export default async function AdminOrganisations({
   searchParams,
 }: {
-  searchParams: Promise<{ vue?: string }>;
+  searchParams: Promise<{ vue?: string; secteur?: string }>;
 }) {
   await exigerRoot();
-  const { vue } = await searchParams;
+  const { vue, secteur } = await searchParams;
   const active = VUES.find((v) => v.cle === vue) ?? VUES[0];
 
   const toutes = await db.select().from(organisations).orderBy(desc(organisations.creeLe));
@@ -100,7 +100,16 @@ export default async function AdminOrganisations({
     toutes,
   } satisfies Record<(typeof VUES)[number]["cle"], typeof toutes>;
 
-  const lignes = parVue[active.cle];
+  // Les secteurs réellement présents, avec leur effectif. Il y en a une quarantaine : une liste
+  // déroulante, pas des onglets — quarante onglets ne se parcourent pas.
+  const secteurs = [...new Set(toutes.flatMap((o) => o.secteurs))]
+    .map((s) => ({ nom: s, n: toutes.filter((o) => o.secteurs.includes(s)).length }))
+    .sort((a, b) => b.n - a.n || a.nom.localeCompare(b.nom));
+
+  const parSecteur = secteur
+    ? parVue[active.cle].filter((o) => o.secteurs.includes(secteur))
+    : parVue[active.cle];
+  const lignes = parSecteur;
 
   // Le programme et la date de dépôt : c'est ce qui permet de décider lequel garder.
   const dossiers =
@@ -123,8 +132,11 @@ export default async function AdminOrganisations({
   return (
     <>
       <EntetePage
-        titre="Organisations"
-        etat={`${toutes.length} au total · ${enAttente.length} à valider`}
+        titre="Lauréats"
+        etat={
+          `${toutes.length} au total · ${enAttente.length} à valider` +
+          (secteur ? ` · ${lignes.length} dans « ${secteur} »` : "")
+        }
         action={{ href: "/admin/organisations/nouvelle", label: "Ajouter un partenaire" }}
       />
 
@@ -145,8 +157,36 @@ export default async function AdminOrganisations({
             </span>
           </Link>
         ))}
+        {/* Un formulaire GET : la sélection devient une URL, donc un lien qu'on partage et un
+            retour arrière qui fonctionne. Aucun JavaScript n'est nécessaire pour cela. */}
+        <form method="get" className="flex items-center gap-2">
+          <input type="hidden" name="vue" value={active.cle} />
+          <select
+            name="secteur"
+            defaultValue={secteur ?? ""}
+            className="h-8 rounded border border-brume bg-white px-2 text-base text-encre"
+          >
+            <option value="">Tous les secteurs</option>
+            {secteurs.map((s) => (
+              <option key={s.nom} value={s.nom}>
+                {s.nom} ({s.n})
+              </option>
+            ))}
+          </select>
+          <button className="h-8 rounded border border-brume bg-white px-3 text-sm text-graphite hover:bg-papier">
+            Filtrer
+          </button>
+          {secteur ? (
+            <Link
+              href={`/admin/organisations?vue=${active.cle}`}
+              className="text-sm text-vert hover:underline"
+            >
+              effacer
+            </Link>
+          ) : null}
+        </form>
         <span className="ml-auto">
-          <ExportCsv quoi="organisations" label="Exporter les organisations" />
+          <ExportCsv quoi="organisations" label="Exporter" />
         </span>
       </div>
 
