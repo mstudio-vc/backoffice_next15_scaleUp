@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { count, countDistinct, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { journal, organisations } from "@/db/schema";
+import { demandesOffres, journal, offres, organisations } from "@/db/schema";
 import { exigerPartenaire } from "@/lib/garde";
 import { Champ, BOUTON } from "@/components/champ";
 import { EntetePage } from "@/components/page-entete";
 import { Badge } from "@/components/badge";
+import { Anneau, Barres, Carte } from "@/components/graphiques";
 import {
   STATUT_ORGANISATION,
   TON_STATUT_ORGANISATION,
@@ -66,6 +68,34 @@ export default async function PartenaireProfil() {
     revalidatePath("/partenaire");
   }
 
+  // Le partenaire n'avait qu'un formulaire : il déclarait qui il est sans jamais voir ce que
+  // ça produit. Trois lectures, sur ses propres offres — combien on le sollicite, sur quelle
+  // offre, et combien de lauréats il accompagne réellement.
+  const sesOffres = await db
+    .select({
+      titre: offres.titre,
+      statut: offres.statut,
+      demandes: count(demandesOffres.id),
+      acceptees: countDistinct(
+        sql`case when ${demandesOffres.statut} = 'acceptee' then ${demandesOffres.organisationId} end`,
+      ),
+      enAttente: count(
+        sql`case when ${demandesOffres.statut} = 'envoyee' then ${demandesOffres.id} end`,
+      ),
+      refusees: count(
+        sql`case when ${demandesOffres.statut} = 'refusee' then ${demandesOffres.id} end`,
+      ),
+    })
+    .from(offres)
+    .leftJoin(demandesOffres, eq(demandesOffres.offreId, offres.id))
+    .where(eq(offres.partenaireId, org.id))
+    .groupBy(offres.id, offres.titre, offres.statut);
+
+  const totalAcceptees = sesOffres.reduce((n, o) => n + Number(o.acceptees), 0);
+  const totalAttente = sesOffres.reduce((n, o) => n + Number(o.enAttente), 0);
+  const totalRefusees = sesOffres.reduce((n, o) => n + Number(o.refusees), 0);
+  const publiees = sesOffres.filter((o) => o.statut === "publiee").length;
+
   const champSelect =
     "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
 
@@ -81,6 +111,49 @@ export default async function PartenaireProfil() {
           Vos offres et votre fiche ne sont pas encore visibles.
         </p>
       ) : null}
+
+      <div className="mb-4 grid gap-3 lg:grid-cols-3">
+        <Carte titre="Vos offres" aide={`${publiees} publiée${publiees > 1 ? "s" : ""} sur ${sesOffres.length}`}>
+          {sesOffres.length === 0 ? (
+            <p className="text-sm text-pierre">
+              Aucune offre publiée.{" "}
+              <Link href="/partenaire/offres/nouvelle" className="text-vert hover:underline">
+                En publier une
+              </Link>
+              .
+            </p>
+          ) : (
+            <Barres
+              parts={sesOffres.map((o) => ({ label: o.titre, valeur: Number(o.demandes) }))}
+              unite="demande"
+              max={5}
+            />
+          )}
+        </Carte>
+
+        <Carte titre="Demandes reçues" aide="Sollicitations des lauréats">
+          <Anneau
+            parts={[
+              { label: "Acceptées", valeur: totalAcceptees },
+              { label: "En attente", valeur: totalAttente },
+              { label: "Refusées", valeur: totalRefusees },
+            ]}
+          />
+        </Carte>
+
+        <Carte titre="Lauréats accompagnés" aide="Comptés une fois, même sollicités plusieurs fois">
+          <p className="text-4xl font-bold text-vert tabular-nums">{totalAcceptees}</p>
+          <p className="mt-1 text-sm text-ardoise">
+            {totalAttente > 0 ? (
+              <Link href="/partenaire/demandes" className="text-vert hover:underline">
+                {totalAttente} demande{totalAttente > 1 ? "s" : ""} à traiter →
+              </Link>
+            ) : (
+              "Aucune demande en attente."
+            )}
+          </p>
+        </Carte>
+      </div>
 
       <div className="max-w-3xl rounded bg-white p-6 ring-1 ring-brume md:p-8">
         <form action={enregistrer} className="grid gap-5 sm:grid-cols-2">

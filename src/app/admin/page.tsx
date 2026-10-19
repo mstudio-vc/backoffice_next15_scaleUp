@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { and, count, countDistinct, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { demandesOffres, offres, organisations, utilisateurs } from "@/db/schema";
+import { candidatures, demandesOffres, offres, organisations, utilisateurs } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
 import { CarteTable, TD, TH, TR, Vide } from "@/components/page-entete";
 import { TYPE_PARTENAIRE } from "@/lib/vocabulaire";
+import { Anneau, Barres, Carte, Courbe } from "@/components/graphiques";
 
 /**
  * Le tableau de bord de l'administration.
@@ -60,6 +61,46 @@ export default async function AdminAccueil() {
           sql`case when ${demandesOffres.statut} = 'acceptee' then ${demandesOffres.organisationId} end`,
         ))),
     ]);
+
+  // De quoi faire parler les chiffres. Trois lectures que des effectifs seuls ne donnent pas :
+  // comment le portefeuille se répartit, où il en est de sa validation, et sur quels secteurs
+  // il se concentre. Tout est agrégé ici, en mémoire : 161 lignes ne justifient pas trois
+  // requêtes d'agrégation de plus.
+  const [statuts, fiches, depots] = await Promise.all([
+    db
+      .select({ statut: organisations.statut, n: count() })
+      .from(organisations)
+      .groupBy(organisations.statut),
+    db
+      .select({ type: organisations.type, secteurs: organisations.secteurs })
+      .from(organisations),
+    db.select({ deposeeLe: candidatures.deposeeLe }).from(candidatures),
+  ]);
+
+  const effectifStatut = (s: string) => statuts.find((x) => x.statut === s)?.n ?? 0;
+
+  const compteurSecteurs = new Map<string, number>();
+  for (const o of fiches) {
+    if (o.type === "partenaire") continue; // on cartographie les lauréats, pas les partenaires
+    for (const s of o.secteurs) compteurSecteurs.set(s, (compteurSecteurs.get(s) ?? 0) + 1);
+  }
+  const secteurs = [...compteurSecteurs].map(([label, valeur]) => ({ label, valeur }));
+
+  // Les dépôts par JOUR, et non par mois : les 155 candidatures sont arrivées sur quelques
+  // semaines d'un même mois. Groupées par mois, elles font un point unique et aucune courbe.
+  // Une candidature sans date reste de côté plutôt que d'être placée arbitrairement.
+  const parJour = new Map<string, number>();
+  for (const d of depots) {
+    if (!d.deposeeLe) continue;
+    const j = d.deposeeLe;
+    const cle = `${j.getFullYear()}-${String(j.getMonth() + 1).padStart(2, "0")}-${String(
+      j.getDate(),
+    ).padStart(2, "0")}`;
+    parJour.set(cle, (parJour.get(cle) ?? 0) + 1);
+  }
+  const evolution = [...parJour]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([cle, valeur]) => ({ label: `${cle.slice(8)}/${cle.slice(5, 7)}`, valeur }));
 
   // Ce qui attend quelqu'un. L'ordre est celui de l'urgence, pas celui du modèle de données.
   const aFaire = [
@@ -125,6 +166,56 @@ export default async function AdminAccueil() {
           Parcourir l&apos;annuaire →
         </Link>
       </section>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Carte titre="Portefeuille" aide="Répartition des organisations inscrites">
+          <Anneau
+            parts={[
+              { label: "Startups Next 15", valeur: startups.n },
+              { label: "Entreprises Scale Up", valeur: pme.n },
+              { label: "Partenaires", valeur: partenaires.n },
+            ]}
+          />
+        </Carte>
+
+        <Carte titre="Validation" aide="Où en est l'examen des dossiers">
+          <Anneau
+            parts={[
+              { label: "Validées", valeur: effectifStatut("validee") },
+              { label: "En attente", valeur: effectifStatut("en_attente") },
+              { label: "Suspendues", valeur: effectifStatut("suspendue") },
+            ]}
+          />
+        </Carte>
+
+        <Carte titre="Dépôts de candidature" aide="Par jour, d'après la date de dépôt Jotform">
+          <Courbe points={evolution} unite="dépôt" />
+        </Carte>
+
+        <Carte
+          titre="Secteurs d'activité"
+          aide="Les lauréats se comptent plusieurs fois : une entreprise peut cocher plusieurs secteurs"
+          className="lg:col-span-2"
+        >
+          <Barres parts={secteurs} unite="lauréat" max={8} />
+        </Carte>
+
+        <Carte titre="Demandes d'offres" aide="État des sollicitations adressées aux partenaires">
+          <Barres
+            parts={[
+              {
+                label: "Acceptées",
+                valeur: collaborations.reduce((n, c) => n + Number(c.laureats), 0),
+              },
+              {
+                label: "En attente",
+                valeur: collaborations.reduce((n, c) => n + Number(c.enAttente), 0),
+              },
+            ]}
+            unite="demande"
+          />
+        </Carte>
+      </div>
 
       <section>
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">

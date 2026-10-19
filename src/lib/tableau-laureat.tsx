@@ -2,7 +2,8 @@ import Link from "next/link";
 import { and, count, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { demandesOffres, documents, offres, organisations } from "@/db/schema";
-import { Badge } from "@/components/badge";
+import { Badge, Pilule } from "@/components/badge";
+import { Anneau, Barres, Carte } from "@/components/graphiques";
 
 /**
  * Le tableau de bord d'un lauréat, startup ou entreprise.
@@ -132,6 +133,15 @@ export async function TableauLaureat({
     },
   ];
 
+  // Ce que les quatre cartes disent en mots, montré en proportions. La complétude surtout :
+  // « 7 sur 9 » se lit, « il en manque deux » se voit.
+  const [refusees] = await db
+    .select({ n: count() })
+    .from(demandesOffres)
+    .where(
+      and(eq(demandesOffres.organisationId, organisationId), eq(demandesOffres.statut, "refusee")),
+    );
+
   return (
     <div className="flex flex-col gap-4">
       <header className="rounded bg-vert px-6 py-5 text-white">
@@ -160,6 +170,44 @@ export async function TableauLaureat({
             ) : null}
           </section>
         ))}
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Carte titre="Complétude de votre fiche" aide="Les champs que vous pouvez renseigner">
+          <Anneau
+            parts={[
+              { label: "Renseignés", valeur: remplis },
+              { label: "À compléter", valeur: aRemplir.length - remplis },
+            ]}
+          />
+        </Carte>
+
+        <Carte titre="Vos demandes" aide="Sollicitations envoyées aux partenaires">
+          <Barres
+            parts={[
+              { label: "Acceptées", valeur: acceptees.n },
+              { label: "En attente", valeur: envoyees.n },
+              { label: "Refusées", valeur: refusees.n },
+            ]}
+            unite="demande"
+          />
+        </Carte>
+
+        <Carte titre="Vos secteurs" aide="Tels qu'ils apparaissent dans l'annuaire">
+          {org.secteurs.length === 0 ? (
+            <p className="text-sm text-pierre">
+              Aucun secteur déclaré — votre fiche n&apos;apparaîtra dans aucun filtre.
+            </p>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {org.secteurs.map((s) => (
+                <li key={s}>
+                  <Pilule>{s}</Pilule>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Carte>
       </div>
     </div>
   );
