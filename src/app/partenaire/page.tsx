@@ -1,28 +1,20 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
-import { count, countDistinct, eq, sql } from "drizzle-orm";
+import { and, count, countDistinct, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { demandesOffres, journal, offres, organisations } from "@/db/schema";
+import { demandesOffres, offres, organisations } from "@/db/schema";
 import { exigerPartenaire } from "@/lib/garde";
-import { Champ, BOUTON } from "@/components/champ";
-import { EntetePage } from "@/components/page-entete";
-import { Badge } from "@/components/badge";
+import { Badge, Pilule } from "@/components/badge";
 import { Anneau, Barres, Carte } from "@/components/graphiques";
-import {
-  STATUT_ORGANISATION,
-  TON_STATUT_ORGANISATION,
-  TYPE_PARTENAIRE,
-  type TypePartenaire,
-} from "@/lib/vocabulaire";
+import { TYPE_PARTENAIRE } from "@/lib/vocabulaire";
 
 /**
- * Le profil d'un partenaire.
+ * Le tableau de bord d'un partenaire — le miroir de celui des lauréats.
  *
- * C'est ici qu'il déclare son MÉTIER — fonds, banque, industriel… Ce choix n'est pas cosmétique :
- * il distingue un capital-risqueur d'un prestataire sans en faire deux rôles, là où le modèle
- * précédent faisait de l'investisseur un type d'organisation à part.
+ * La racine de l'espace portait le formulaire de profil : un partenaire qui arrive y était mis
+ * à remplir des champs, sans jamais savoir si ses offres servent à quelque chose. Le profil a
+ * sa propre page ; ici on répond à « où en suis-je ».
  */
-export default async function PartenaireProfil() {
+export default async function PartenaireTableauDeBord() {
   const s = await exigerPartenaire();
 
   const org = await db.query.organisations.findFirst({
@@ -30,90 +22,142 @@ export default async function PartenaireProfil() {
   });
   if (!org) return <p className="text-ardoise">Organisation introuvable.</p>;
 
-  async function enregistrer(formData: FormData) {
-    "use server";
-    // L'organisation vient de la session : un identifiant posté peut être forgé.
-    const session = await exigerPartenaire();
-    const vide = (nom: string) => String(formData.get(nom) ?? "").trim() || null;
+  // Les champs que le partenaire peut lui-même renseigner. Le métier en fait partie : sans lui,
+  // il n'apparaît dans aucune famille de l'annuaire.
+  const aRemplir: [string, string | null][] = [
+    ["Métier", org.typePartenaire],
+    ["Localisation", org.localisation],
+    ["Téléphone", org.telephone],
+    ["E-mail officiel", org.emailOfficiel],
+    ["Site internet", org.siteInternet],
+    ["Description", org.description],
+    ["Secteurs", org.secteurs.length > 0 ? "oui" : null],
+  ];
+  const remplis = aRemplir.filter(([, v]) => v).length;
+  const manquants = aRemplir.filter(([, v]) => !v).map(([k]) => k);
 
-    const metier = formData.get("typePartenaire") as TypePartenaire;
-    if (!(metier in TYPE_PARTENAIRE)) return;
-
-    const secteurs = String(formData.get("secteurs") ?? "")
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean);
-
-    await db
-      .update(organisations)
-      .set({
-        typePartenaire: metier,
-        description: vide("description"),
-        localisation: vide("localisation"),
-        telephone: vide("telephone"),
-        emailOfficiel: vide("emailOfficiel"),
-        siteInternet: vide("siteInternet"),
-        linkedin: vide("linkedin"),
-        secteurs,
-        misAJourLe: new Date(),
+  const [sesOffres, [laureatsVisibles]] = await Promise.all([
+    db
+      .select({
+        id: offres.id,
+        titre: offres.titre,
+        statut: offres.statut,
+        demandes: count(demandesOffres.id),
+        acceptees: countDistinct(
+          sql`case when ${demandesOffres.statut} = 'acceptee' then ${demandesOffres.organisationId} end`,
+        ),
+        enAttente: count(
+          sql`case when ${demandesOffres.statut} = 'envoyee' then ${demandesOffres.id} end`,
+        ),
+        refusees: count(
+          sql`case when ${demandesOffres.statut} = 'refusee' then ${demandesOffres.id} end`,
+        ),
       })
-      .where(eq(organisations.id, session.organisationId!));
+      .from(offres)
+      .leftJoin(demandesOffres, eq(demandesOffres.offreId, offres.id))
+      .where(eq(offres.partenaireId, org.id))
+      .groupBy(offres.id, offres.titre, offres.statut),
 
-    await db.insert(journal).values({
-      utilisateurId: session.utilisateurId,
-      organisationId: session.organisationId,
-      action: "profil.modifie",
-      details: { typePartenaire: metier },
-    });
-    revalidatePath("/partenaire");
-  }
+    // Le vivier qu'il peut solliciter : les lauréats validés, donc visibles dans son annuaire.
+    db
+      .select({ n: count() })
+      .from(organisations)
+      .where(
+        and(
+          eq(organisations.statut, "validee"),
+          sql`${organisations.type} in ('startup','pme')`,
+        ),
+      ),
+  ]);
 
-  // Le partenaire n'avait qu'un formulaire : il déclarait qui il est sans jamais voir ce que
-  // ça produit. Trois lectures, sur ses propres offres — combien on le sollicite, sur quelle
-  // offre, et combien de lauréats il accompagne réellement.
-  const sesOffres = await db
-    .select({
-      titre: offres.titre,
-      statut: offres.statut,
-      demandes: count(demandesOffres.id),
-      acceptees: countDistinct(
-        sql`case when ${demandesOffres.statut} = 'acceptee' then ${demandesOffres.organisationId} end`,
-      ),
-      enAttente: count(
-        sql`case when ${demandesOffres.statut} = 'envoyee' then ${demandesOffres.id} end`,
-      ),
-      refusees: count(
-        sql`case when ${demandesOffres.statut} = 'refusee' then ${demandesOffres.id} end`,
-      ),
-    })
-    .from(offres)
-    .leftJoin(demandesOffres, eq(demandesOffres.offreId, offres.id))
-    .where(eq(offres.partenaireId, org.id))
-    .groupBy(offres.id, offres.titre, offres.statut);
-
-  const totalAcceptees = sesOffres.reduce((n, o) => n + Number(o.acceptees), 0);
-  const totalAttente = sesOffres.reduce((n, o) => n + Number(o.enAttente), 0);
-  const totalRefusees = sesOffres.reduce((n, o) => n + Number(o.refusees), 0);
+  const acceptees = sesOffres.reduce((n, o) => n + Number(o.acceptees), 0);
+  const enAttente = sesOffres.reduce((n, o) => n + Number(o.enAttente), 0);
+  const refusees = sesOffres.reduce((n, o) => n + Number(o.refusees), 0);
   const publiees = sesOffres.filter((o) => o.statut === "publiee").length;
 
-  const champSelect =
-    "h-8 rounded border border-brume bg-white px-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume";
+  const etapes = [
+    {
+      titre: "Validation de votre organisation",
+      etat:
+        org.statut === "validee"
+          ? { texte: "Validée", ton: "succes" as const }
+          : org.statut === "suspendue"
+            ? { texte: "Suspendue", ton: "erreur" as const }
+            : { texte: "En attente", ton: "attente" as const },
+      detail:
+        org.statut === "validee"
+          ? "Vos offres sont visibles des lauréats et vous apparaissez dans l'annuaire."
+          : "Tant que l'administration n'a pas validé, vos offres ne sont visibles de personne.",
+      lien: null,
+    },
+    {
+      titre: "Votre profil",
+      etat: {
+        texte: `${remplis}/${aRemplir.length}`,
+        ton: remplis === aRemplir.length ? ("succes" as const) : ("attente" as const),
+      },
+      detail:
+        manquants.length === 0
+          ? "Tout est renseigné."
+          : `Il manque : ${manquants.join(", ")}.`,
+      lien: { href: "/partenaire/profil", label: "Compléter mon profil" },
+    },
+    {
+      titre: "Vos offres",
+      etat: {
+        texte: String(publiees),
+        ton: publiees > 0 ? ("succes" as const) : ("attente" as const),
+      },
+      detail:
+        sesOffres.length === 0
+          ? `Aucune offre. ${laureatsVisibles.n} lauréats pourraient la voir.`
+          : `${publiees} publiée${publiees > 1 ? "s" : ""} sur ${sesOffres.length}, devant ${laureatsVisibles.n} lauréats validés.`,
+      lien: { href: "/partenaire/offres/nouvelle", label: "Publier une offre" },
+    },
+    {
+      titre: "Demandes à traiter",
+      etat: {
+        texte: String(enAttente),
+        ton: enAttente > 0 ? ("alerte" as const) : ("inactif" as const),
+      },
+      detail:
+        enAttente > 0
+          ? "Des lauréats attendent votre réponse."
+          : `${acceptees} lauréat${acceptees > 1 ? "s" : ""} accompagné${acceptees > 1 ? "s" : ""} à ce jour.`,
+      lien: { href: "/partenaire/demandes", label: "Voir les demandes" },
+    },
+  ];
 
   return (
-    <>
-      <EntetePage titre={org.denominationSociale} etat="Profil visible dans l'annuaire" />
-
-      {org.statut !== "validee" ? (
-        <p className="mb-4 flex items-center gap-2 text-base text-graphite">
-          <Badge ton={TON_STATUT_ORGANISATION[org.statut]}>
-            {STATUT_ORGANISATION[org.statut]}
-          </Badge>
-          Vos offres et votre fiche ne sont pas encore visibles.
+    <div className="flex flex-col gap-4">
+      <header className="rounded bg-vert px-6 py-5 text-white">
+        <h1 className="text-2xl font-bold">{org.denominationSociale}</h1>
+        <p className="mt-1 text-sm text-white/75">
+          Partenaire
+          {org.typePartenaire ? ` · ${TYPE_PARTENAIRE[org.typePartenaire]}` : ""}
+          {org.localisation ? ` · ${org.localisation}` : ""}
         </p>
-      ) : null}
+      </header>
 
-      <div className="mb-4 grid gap-3 lg:grid-cols-3">
-        <Carte titre="Vos offres" aide={`${publiees} publiée${publiees > 1 ? "s" : ""} sur ${sesOffres.length}`}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {etapes.map((e) => (
+          <section key={e.titre} className="flex flex-col rounded bg-white p-4 ring-1 ring-brume">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-bold text-encre">{e.titre}</h2>
+              <Badge ton={e.etat.ton}>{e.etat.texte}</Badge>
+            </div>
+            <p className="mt-1 text-sm text-ardoise">{e.detail}</p>
+            {e.lien ? (
+              <Link href={e.lien.href} className="mt-3 text-base text-vert hover:underline">
+                {e.lien.label} →
+              </Link>
+            ) : null}
+          </section>
+        ))}
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Carte titre="Vos offres" aide="Classées par nombre de sollicitations">
           {sesOffres.length === 0 ? (
             <p className="text-sm text-pierre">
               Aucune offre publiée.{" "}
@@ -134,76 +178,33 @@ export default async function PartenaireProfil() {
         <Carte titre="Demandes reçues" aide="Sollicitations des lauréats">
           <Anneau
             parts={[
-              { label: "Acceptées", valeur: totalAcceptees },
-              { label: "En attente", valeur: totalAttente },
-              { label: "Refusées", valeur: totalRefusees },
+              { label: "Acceptées", valeur: acceptees },
+              { label: "En attente", valeur: enAttente },
+              { label: "Refusées", valeur: refusees },
             ]}
           />
         </Carte>
 
-        <Carte titre="Lauréats accompagnés" aide="Comptés une fois, même sollicités plusieurs fois">
-          <p className="text-4xl font-bold text-vert tabular-nums">{totalAcceptees}</p>
-          <p className="mt-1 text-sm text-ardoise">
-            {totalAttente > 0 ? (
-              <Link href="/partenaire/demandes" className="text-vert hover:underline">
-                {totalAttente} demande{totalAttente > 1 ? "s" : ""} à traiter →
+        <Carte titre="Vos secteurs d'intérêt" aide="Tels qu'ils apparaissent dans l'annuaire">
+          {org.secteurs.length === 0 ? (
+            <p className="text-sm text-pierre">
+              Aucun secteur déclaré — vous n&apos;apparaîtrez dans aucun filtre.{" "}
+              <Link href="/partenaire/profil" className="text-vert hover:underline">
+                Les renseigner
               </Link>
-            ) : (
-              "Aucune demande en attente."
-            )}
-          </p>
+              .
+            </p>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {org.secteurs.map((s) => (
+                <li key={s}>
+                  <Pilule>{s}</Pilule>
+                </li>
+              ))}
+            </ul>
+          )}
         </Carte>
       </div>
-
-      <div className="max-w-3xl rounded bg-white p-6 ring-1 ring-brume md:p-8">
-        <form action={enregistrer} className="grid gap-5 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-base font-bold text-graphite">Métier</span>
-            <select
-              name="typePartenaire"
-              defaultValue={org.typePartenaire ?? "autre"}
-              className={champSelect}
-            >
-              {Object.entries(TYPE_PARTENAIRE).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-          </label>
-
-          <Champ label="Localisation" name="localisation" defaultValue={org.localisation ?? ""} placeholder="Abidjan" />
-          <Champ label="Téléphone" name="telephone" defaultValue={org.telephone ?? ""} />
-          <Champ label="E-mail officiel" name="emailOfficiel" type="email" defaultValue={org.emailOfficiel ?? ""} />
-          <Champ label="Site internet" name="siteInternet" type="url" defaultValue={org.siteInternet ?? ""} placeholder="https://" />
-          <Champ label="Page LinkedIn" name="linkedin" type="url" defaultValue={org.linkedin ?? ""} />
-
-          <div className="sm:col-span-2">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-base font-bold text-graphite">Description</span>
-              <textarea
-                name="description"
-                rows={3}
-                defaultValue={org.description ?? ""}
-                className="rounded border border-brume bg-white p-3.5 text-base text-encre outline-none focus:border-vert focus:ring-4 focus:ring-brume"
-              />
-              <span className="text-xs text-pierre">Une phrase, affichée dans l&apos;annuaire.</span>
-            </label>
-          </div>
-
-          <div className="sm:col-span-2">
-            <Champ
-              label="Secteurs d'intérêt"
-              name="secteurs"
-              defaultValue={org.secteurs.join(", ")}
-              placeholder="Fintech, Agritech"
-              aide="Séparés par des virgules. Ils s'affichent en étiquettes dans l'annuaire."
-            />
-          </div>
-
-          <div className="sm:col-span-2">
-            <button className={BOUTON}>Enregistrer</button>
-          </div>
-        </form>
-      </div>
-    </>
+    </div>
   );
 }
