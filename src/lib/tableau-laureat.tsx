@@ -1,21 +1,25 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { candidatures, organisations } from "@/db/schema";
+import { demandesOffres, documents, offres, organisations } from "@/db/schema";
+import { Badge } from "@/components/badge";
 
 /**
  * Le tableau de bord d'un lauréat, startup ou entreprise.
  *
- * La fiche affichée vient de `organisations` — le profil VIVANT. La candidature, elle, reste
- * figée : on n'en montre ici que la date et le volume, pour que la distinction soit visible
- * dès le premier écran.
+ * Il affichait sa fiche d'identité — c'est-à-dire ce que « Ma fiche » montre déjà, en mieux.
+ * Un premier écran qui répète l'onglet suivant ne sert à rien.
+ *
+ * Il répond désormais à la seule question qu'on se pose en arrivant : OÙ EN SUIS-JE. Quatre
+ * états, chacun avec ce qu'il reste à faire et le chemin pour le faire. Un suivi qui constate
+ * sans donner la main suivante n'est qu'un bulletin.
  */
 export async function TableauLaureat({
   organisationId,
   base,
 }: {
   organisationId: string;
-  /** Préfixe de l'espace, pour renvoyer vers SA fiche et non celle de l'autre espace. */
+  /** Préfixe de l'espace, pour renvoyer vers SES écrans et non ceux de l'autre espace. */
   base: string;
 }) {
   const org = await db.query.organisations.findFirst({
@@ -23,85 +27,140 @@ export async function TableauLaureat({
   });
   if (!org) return <p className="text-ardoise">Organisation introuvable.</p>;
 
-  const dossier = await db.query.candidatures.findFirst({
-    where: eq(candidatures.organisationId, organisationId),
-  });
-  const nbChamps = dossier ? Object.keys(dossier.donnees as object).length : 0;
-
-  const fiche: [string, string | null][] = [
-    ["Dénomination sociale", org.denominationSociale],
+  // Les champs que le lauréat peut lui-même compléter. Le RCCM n'en fait pas partie : il vient
+  // de la candidature signée, et 138 lauréats sur 155 ne l'ont jamais renseigné — le compter
+  // afficherait une fiche « incomplète » que personne ne peut compléter ici.
+  const aRemplir: [string, string | null][] = [
     ["Nom commercial", org.nomCommercial],
-    ["Forme juridique", org.formeJuridique],
-    ["RCCM", org.rccm],
-    ["Compte contribuable", org.ncc],
-    ["Siège", org.adresseSiege ?? org.siegeSocial],
+    ["Localisation", org.localisation],
+    ["Adresse du siège", org.adresseSiege],
     ["Téléphone", org.telephone],
     ["E-mail officiel", org.emailOfficiel],
     ["Site internet", org.siteInternet],
+    ["Page LinkedIn", org.linkedin],
+    ["Description", org.description],
+    ["Secteurs", org.secteurs.length > 0 ? "oui" : null],
+  ];
+  const remplis = aRemplir.filter(([, v]) => v).length;
+  const manquants = aRemplir.filter(([, v]) => !v).map(([k]) => k);
+
+  const [[nbDocuments], [envoyees], [acceptees], [disponibles]] = await Promise.all([
+    db.select({ n: count() }).from(documents).where(eq(documents.organisationId, organisationId)),
+    db
+      .select({ n: count() })
+      .from(demandesOffres)
+      .where(
+        and(eq(demandesOffres.organisationId, organisationId), eq(demandesOffres.statut, "envoyee")),
+      ),
+    db
+      .select({ n: count() })
+      .from(demandesOffres)
+      .where(
+        and(
+          eq(demandesOffres.organisationId, organisationId),
+          eq(demandesOffres.statut, "acceptee"),
+        ),
+      ),
+    // Les offres qu'il peut solliciter : publiées, d'un partenaire validé, et qui le ciblent.
+    db
+      .select({ n: count() })
+      .from(offres)
+      .innerJoin(organisations, eq(organisations.id, offres.partenaireId))
+      .where(
+        and(
+          eq(offres.statut, "publiee"),
+          eq(organisations.statut, "validee"),
+          inArray(offres.cible, ["toutes", org.type === "startup" ? "startups" : "pme"]),
+        ),
+      ),
+  ]);
+
+  const etapes = [
+    {
+      titre: "Validation de votre dossier",
+      etat:
+        org.statut === "validee"
+          ? { texte: "Validée", ton: "succes" as const }
+          : org.statut === "suspendue"
+            ? { texte: "Suspendue", ton: "erreur" as const }
+            : { texte: "En attente", ton: "attente" as const },
+      detail:
+        org.statut === "validee"
+          ? "Votre entreprise apparaît dans l'annuaire et peut solliciter les offres."
+          : org.statut === "suspendue"
+            ? "Contactez l'administration du programme."
+            : "L'administration examine votre dossier. Rien à faire de votre côté.",
+      lien: null,
+    },
+    {
+      titre: "Votre fiche",
+      etat: {
+        texte: `${remplis}/${aRemplir.length}`,
+        ton: remplis === aRemplir.length ? ("succes" as const) : ("attente" as const),
+      },
+      detail:
+        manquants.length === 0
+          ? "Tout est renseigné."
+          : `Il manque : ${manquants.slice(0, 3).join(", ")}${
+              manquants.length > 3 ? `, et ${manquants.length - 3} autre${manquants.length > 4 ? "s" : ""}` : ""
+            }.`,
+      lien: { href: `${base}/fiche`, label: "Compléter ma fiche" },
+    },
+    {
+      titre: "Vos documents",
+      etat: {
+        texte: String(nbDocuments.n),
+        ton: nbDocuments.n > 0 ? ("succes" as const) : ("attente" as const),
+      },
+      detail:
+        nbDocuments.n === 0
+          ? "Aucune pièce déposée. Présentation, business plan, états financiers."
+          : `${nbDocuments.n} pièce${nbDocuments.n > 1 ? "s" : ""} au dossier.`,
+      lien: { href: `${base}/documents/nouveau`, label: "Déposer un document" },
+    },
+    {
+      titre: "Vos demandes d'offres",
+      etat: {
+        texte: `${acceptees.n} acceptée${acceptees.n > 1 ? "s" : ""}`,
+        ton: acceptees.n > 0 ? ("succes" as const) : ("inactif" as const),
+      },
+      detail:
+        envoyees.n > 0
+          ? `${envoyees.n} demande${envoyees.n > 1 ? "s" : ""} en attente de réponse. ${disponibles.n} offre${disponibles.n > 1 ? "s" : ""} vous ${disponibles.n > 1 ? "sont" : "est"} ouverte${disponibles.n > 1 ? "s" : ""}.`
+          : `${disponibles.n} offre${disponibles.n > 1 ? "s" : ""} vous ${disponibles.n > 1 ? "sont" : "est"} ouverte${disponibles.n > 1 ? "s" : ""}.`,
+      lien: { href: `${base}/offres`, label: "Voir les offres" },
+    },
   ];
 
-  const renseignes = fiche.filter(([, v]) => v).length;
-
   return (
-    <div className="flex flex-col gap-6">
-      {/* Bandeau d'identité : le nom, l'état, et ce qu'il reste à compléter. Les candidatures
-          sont très lacunaires — autant le dire dès le premier écran plutôt que de laisser
-          découvrir des champs vides un par un. */}
-      <section className="overflow-hidden rounded bg-white ring-1 ring-brume">
-        <div className="bg-vert px-6 py-5 text-white">
-          <h1 className="text-2xl font-bold">{org.denominationSociale}</h1>
-          <p className="mt-1 text-sm text-white/75">
-            {org.nomCommercial ? `${org.nomCommercial} · ` : ""}
-            {org.type === "startup" ? "Ivoire Tech Next 15" : "Ivoire Tech Scale Up"}
-            {" · "}
-            {org.statut === "validee" ? "fiche validée" : org.statut === "en_attente" ? "en attente de validation" : "suspendue"}
-          </p>
-        </div>
-
-        <dl className="grid gap-x-8 gap-y-4 px-6 py-6 sm:grid-cols-2 lg:grid-cols-3">
-          {fiche.map(([k, v]) => (
-            <div key={k}>
-              <dt className="text-xs font-bold tracking-wide text-pierre uppercase">{k}</dt>
-              <dd className="mt-0.5 text-base text-encre">
-                {v ?? <span className="text-brume">non renseigné</span>}
-              </dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="border-t border-brume bg-papier px-6 py-3 text-sm text-ardoise">
-          {renseignes} champ{renseignes > 1 ? "s" : ""} sur {fiche.length} renseigné
-          {renseignes > 1 ? "s" : ""}.{" "}
-          {renseignes < fiche.length
-            ? "Les champs manquants viennent d'une candidature incomplète — ils seront bientôt modifiables ici."
-            : "Votre fiche est complète."}
+    <div className="flex flex-col gap-4">
+      <header className="rounded bg-vert px-6 py-5 text-white">
+        <h1 className="text-2xl font-bold">{org.denominationSociale}</h1>
+        <p className="mt-1 text-sm text-white/75">
+          {org.nomCommercial ? `${org.nomCommercial} · ` : ""}
+          {org.type === "startup" ? "Ivoire Tech Next 15" : "Ivoire Tech Scale Up"}
         </p>
-      </section>
+      </header>
 
-      <section className="rounded bg-white p-6 ring-1 ring-brume">
-        <h2 className="text-lg font-bold text-encre">Votre candidature</h2>
-        {dossier ? (
-          <>
-            <p className="mt-2 text-base text-ardoise">
-              Déposée le{" "}
-              <b className="text-encre">
-                {dossier.deposeeLe ? dossier.deposeeLe.toLocaleDateString("fr-FR") : "date non renseignée"}
-              </b>{" "}
-              · <b className="text-encre">{nbChamps}</b> réponses conservées.
-            </p>
-            <p className="mt-3 rounded border-l-4 border-orange bg-orange/5 px-4 py-3 text-sm text-graphite">
-              Elle est conservée telle que vous l&apos;avez signée et ne change plus. Les
-              corrections se font sur{" "}
-              <Link href={`${base}/fiche`} className="font-normal text-vert underline">
-                votre fiche
+      <div className="grid gap-3 sm:grid-cols-2">
+        {etapes.map((e) => (
+          <section key={e.titre} className="flex flex-col rounded bg-white p-4 ring-1 ring-brume">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-bold text-encre">{e.titre}</h2>
+              <Badge ton={e.etat.ton}>{e.etat.texte}</Badge>
+            </div>
+            <p className="mt-1 text-sm text-ardoise">{e.detail}</p>
+            {e.lien ? (
+              <Link
+                href={e.lien.href}
+                className="mt-3 text-base text-vert hover:underline"
+              >
+                {e.lien.label} →
               </Link>
-              .
-            </p>
-          </>
-        ) : (
-          <p className="mt-2 text-base text-pierre">Aucune candidature importée pour le moment.</p>
-        )}
-      </section>
+            ) : null}
+          </section>
+        ))}
+      </div>
     </div>
   );
 }

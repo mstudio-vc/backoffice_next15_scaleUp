@@ -12,8 +12,8 @@ export default async function EntrepriseLayout({ children }: { children: React.R
       role="Lauréat"
       nav={[
         { href: "/entreprise", label: "Tableau de bord" },
+        // Voir le commentaire de l'espace startup : les documents vivent dans « Ma fiche ».
         { href: "/entreprise/fiche", label: "Ma fiche" },
-        { href: "/entreprise/documents", label: "Documents" },
         { href: "/entreprise/offres", label: "Offres" },
         { href: "/entreprise/annuaire", label: "Annuaire" },
       ]}

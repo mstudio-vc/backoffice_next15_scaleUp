@@ -12,8 +12,10 @@ export default async function StartupLayout({ children }: { children: React.Reac
       role="Lauréat"
       nav={[
         { href: "/startup", label: "Tableau de bord" },
+        // « Documents » a disparu de la barre : la liste et le dépôt vivent désormais dans
+        // « Ma fiche », avec le reste de ce qui décrit l'entreprise. La route demeure, elle
+        // porte le formulaire de dépôt et les liens déjà envoyés.
         { href: "/startup/fiche", label: "Ma fiche" },
-        { href: "/startup/documents", label: "Documents" },
         { href: "/startup/offres", label: "Offres" },
         { href: "/startup/annuaire", label: "Annuaire" },
       ]}
