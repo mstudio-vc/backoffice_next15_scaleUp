@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { organisations } from "@/db/schema";
 import { Badge, Pilule } from "@/components/badge";
+import { BOUTON, BOUTON_CLAIR } from "@/components/champ";
 import { Retour, Vide } from "@/components/page-entete";
 import {
   STATUT_ORGANISATION,
@@ -104,6 +105,38 @@ export async function FicheAnnuaire({
         </section>
 
         <section className="rounded bg-white p-4 ring-1 ring-brume">
+          {/* Entrer en relation est la raison d'être d'un annuaire. Les coordonnées venaient
+              après la description, en lecture seule : il fallait sélectionner une adresse à la
+              souris pour écrire. Les actions passent devant, et ouvrent le courrier. */}
+          {org.emailOfficiel || org.siteInternet ? (
+            <div className="mb-3 flex flex-wrap gap-2 border-b border-brume pb-3">
+              {org.emailOfficiel ? (
+                <a
+                  href={`mailto:${org.emailOfficiel}?subject=${encodeURIComponent(
+                    "Ivoire Tech — prise de contact",
+                  )}`}
+                  className={BOUTON}
+                >
+                  Écrire
+                </a>
+              ) : null}
+              {org.siteInternet ? (
+                <a
+                  href={
+                    org.siteInternet.startsWith("http")
+                      ? org.siteInternet
+                      : `https://${org.siteInternet}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={BOUTON_CLAIR}
+                >
+                  Site internet
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+
           <h2 className="mb-1 text-lg font-bold text-encre">Contact</h2>
           {contacts.length === 0 && !org.adresseSiege ? (
             <p className="text-base text-pierre">Aucune coordonnée publiée.</p>

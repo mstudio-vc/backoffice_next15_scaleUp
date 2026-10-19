@@ -6,10 +6,12 @@ import { Badge } from "@/components/badge";
 import { SAISIE } from "@/components/champ";
 import { Vide } from "@/components/page-entete";
 import {
+  FAMILLE_PARTENAIRE,
   STATUT_ORGANISATION,
   TON_STATUT_ORGANISATION,
   TYPE_ORGANISATION,
   TYPE_PARTENAIRE,
+  type FamillePartenaire,
   type TypeOrganisation,
 } from "@/lib/vocabulaire";
 
@@ -45,6 +47,7 @@ const PAR_LOT = 24;
 export async function Annuaire({
   base,
   filtre = "toutes",
+  famille,
   q = "",
   n,
   toutVoir = false,
@@ -52,12 +55,24 @@ export async function Annuaire({
   /** Préfixe des liens, pour que l'annuaire reste dans l'espace où il est affiché. */
   base: string;
   filtre?: string;
+  /** Famille de partenaires — financier, investisseur, corporate, autres. */
+  famille?: string;
   q?: string;
   n?: string;
   toutVoir?: boolean;
 }) {
   const choisi = FILTRES.find((f) => f.cle === filtre) ?? FILTRES[0];
   const recherche = q.trim();
+
+  // La famille n'a de sens que sur les partenaires : filtrer des startups par « financier »
+  // ne voudrait rien dire.
+  const famChoisie =
+    choisi.cle === "partenaires" && famille && famille in FAMILLE_PARTENAIRE
+      ? (famille as FamillePartenaire)
+      : null;
+  const parFamille: SQL | undefined = famChoisie
+    ? inArray(organisations.typePartenaire, [...FAMILLE_PARTENAIRE[famChoisie].metiers])
+    : undefined;
   const limite = Math.min(Math.max(Number(n) || PAR_LOT, PAR_LOT), 500);
 
   const visible = toutVoir ? undefined : eq(organisations.statut, "validee");
@@ -80,14 +95,29 @@ export async function Annuaire({
     db
       .select({ n: count() })
       .from(organisations)
-      .where(and(visible, cherche, inArray(organisations.type, choisi.types))),
+      .where(and(visible, cherche, inArray(organisations.type, choisi.types), parFamille)),
     db
       .select()
       .from(organisations)
-      .where(and(visible, cherche, inArray(organisations.type, choisi.types)))
+      .where(and(visible, cherche, inArray(organisations.type, choisi.types), parFamille))
       .orderBy(organisations.denominationSociale)
       .limit(limite),
   ]);
+
+  // L'effectif de chaque famille, compté sur les partenaires visibles.
+  const partenaires =
+    choisi.cle === "partenaires"
+      ? await db
+          .select({ metier: organisations.typePartenaire, n: count() })
+          .from(organisations)
+          .where(and(visible, cherche, eq(organisations.type, "partenaire")))
+          .groupBy(organisations.typePartenaire)
+      : [];
+
+  const effectifFamille = (f: FamillePartenaire) =>
+    partenaires
+      .filter((p) => p.metier && ([...FAMILLE_PARTENAIRE[f].metiers] as string[]).includes(p.metier))
+      .reduce((s, p) => s + p.n, 0);
 
   const effectif = (types: TypeOrganisation[]) =>
     parType.filter((p) => types.includes(p.type)).reduce((s, p) => s + p.n, 0);
@@ -95,6 +125,7 @@ export async function Annuaire({
   const lien = (p: Record<string, string | undefined>, ancre?: string) => {
     const u = new URLSearchParams();
     if (p.filtre && p.filtre !== "toutes") u.set("filtre", p.filtre);
+    if (p.famille) u.set("famille", p.famille);
     if (p.q) u.set("q", p.q);
     if (p.n) u.set("n", p.n);
     const s = u.toString();
@@ -155,6 +186,33 @@ export async function Annuaire({
           {lignes.length} affichée{lignes.length > 1 ? "s" : ""} sur {total.n}
         </span>
       </div>
+
+      {/* Les familles, seulement sous l'onglet Partenaires : elles n'ont pas de sens ailleurs. */}
+      {choisi.cle === "partenaires" ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-sm text-pierre">Famille :</span>
+          <Link
+            href={lien({ filtre: "partenaires", q: recherche })}
+            className={`rounded px-2 py-0.5 text-sm ${
+              famChoisie ? "text-ardoise hover:bg-papier" : "bg-ardoise font-bold text-white"
+            }`}
+          >
+            Toutes
+          </Link>
+          {(Object.keys(FAMILLE_PARTENAIRE) as FamillePartenaire[]).map((f) => (
+            <Link
+              key={f}
+              href={lien({ filtre: "partenaires", famille: f, q: recherche })}
+              className={`rounded px-2 py-0.5 text-sm ${
+                famChoisie === f ? "bg-ardoise font-bold text-white" : "text-ardoise hover:bg-papier"
+              }`}
+            >
+              {FAMILLE_PARTENAIRE[f].label}
+              <span className="ml-1 opacity-70">{effectifFamille(f)}</span>
+            </Link>
+          ))}
+        </div>
+      ) : null}
 
       {lignes.length === 0 ? (
         <Vide

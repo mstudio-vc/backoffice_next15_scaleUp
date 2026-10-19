@@ -101,6 +101,23 @@ export const STATUT_DEMANDE = {
 } as const;
 
 /**
+ * Les familles de partenaires, pour l'annuaire.
+ *
+ * Les sept métiers sont justes mais trop fins pour parcourir une liste : on cherche « un
+ * financier », pas « une banque ou un capital-risqueur ou un fonds de capital-investissement ».
+ * La famille regroupe, le métier reste affiché sur la fiche.
+ */
+export const FAMILLE_PARTENAIRE = {
+  financier: { label: "Financier", metiers: ["banque"] },
+  investisseur: { label: "Investisseur", metiers: ["vc", "private_equity"] },
+  corporate: { label: "Corporate", metiers: ["industrie"] },
+  autres: { label: "Autres", metiers: ["institution", "conseil", "autre"] },
+} as const satisfies Record<string, { label: string; metiers: readonly TypePartenaireCle[] }>;
+
+type TypePartenaireCle = keyof typeof TYPE_PARTENAIRE;
+export type FamillePartenaire = keyof typeof FAMILLE_PARTENAIRE;
+
+/**
  * Ce que raconte une ligne de journal.
  *
  * Le journal affichait sa clé technique — « fiche.modifiee », « acces.ouvert ». Un registre
