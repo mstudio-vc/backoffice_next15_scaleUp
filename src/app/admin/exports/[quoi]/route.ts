@@ -42,18 +42,38 @@ export async function GET(_requete: Request, { params }: { params: Promise<{ quo
 
   switch (quoi) {
     case "organisations":
-      lignes = await db
-        .select({
-          nom: organisations.denominationSociale,
-          type: organisations.type,
-          statut: organisations.statut,
-          localisation: organisations.localisation,
-          email: organisations.emailOfficiel,
-          site: organisations.siteInternet,
-          creeLe: organisations.creeLe,
-        })
-        .from(organisations)
-        .orderBy(organisations.denominationSociale);
+      // L'export portait sept colonnes, dont ni le programme, ni les secteurs, ni de quoi
+      // joindre quiconque. Un fichier qu'il faut recroiser à la main avec l'écran ne sert à
+      // rien : on exporte pour préparer un comité, pas pour relire ce qu'on vient de voir.
+      lignes = (
+        await db
+          .select({
+            nom: organisations.denominationSociale,
+            nomCommercial: organisations.nomCommercial,
+            type: organisations.type,
+            metierPartenaire: organisations.typePartenaire,
+            statut: organisations.statut,
+            formeJuridique: organisations.formeJuridique,
+            rccm: organisations.rccm,
+            ncc: organisations.ncc,
+            secteurs: organisations.secteurs,
+            localisation: organisations.localisation,
+            adresse: organisations.adresseSiege,
+            telephone: organisations.telephone,
+            email: organisations.emailOfficiel,
+            site: organisations.siteInternet,
+            linkedin: organisations.linkedin,
+            description: organisations.description,
+            creeLe: organisations.creeLe,
+          })
+          .from(organisations)
+          .orderBy(organisations.denominationSociale)
+      ).map((o) => ({
+        ...o,
+        // Le programme se déduit du type : l'écrire épargne au lecteur de le savoir.
+        programme: o.type === "startup" ? "Next 15" : o.type === "pme" ? "Scale Up" : "",
+        secteurs: o.secteurs.join(" | "),
+      }));
       break;
     case "utilisateurs":
       lignes = await db

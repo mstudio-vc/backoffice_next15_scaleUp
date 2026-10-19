@@ -5,11 +5,14 @@ import { candidatures, organisations } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
 import { Badge } from "@/components/badge";
 import { CarteTable, EntetePage, TD, TH, TR, Vide } from "@/components/page-entete";
+import { ExportCsv } from "@/components/export-csv";
 import {
   PROGRAMME,
   STATUT_ORGANISATION,
   TON_STATUT_ORGANISATION,
   TYPE_ORGANISATION,
+  TYPE_PARTENAIRE,
+  programmeDe,
 } from "@/lib/vocabulaire";
 
 /**
@@ -22,8 +25,16 @@ import {
  * Aucune écriture ne part d'ici. La liste mène à la fiche, la fiche mène à la confirmation,
  * et c'est la confirmation qui écrit (règles 5 et 8).
  */
+/**
+ * Les vues séparent ce que le programme distingue : deux promotions, et les partenaires qui les
+ * accompagnent. Un écran qui mélange 104 startups, 51 PME et 6 partenaires dans une seule liste
+ * oblige à trier de tête — alors que personne ne travaille jamais sur les trois à la fois.
+ */
 const VUES = [
   { cle: "a-traiter", label: "À traiter" },
+  { cle: "next15", label: "Next 15" },
+  { cle: "scaleup", label: "Scale Up" },
+  { cle: "partenaires", label: "Partenaires" },
   { cle: "doublons", label: "Doublons" },
   { cle: "toutes", label: "Toutes" },
 ] as const;
@@ -79,7 +90,17 @@ export default async function AdminOrganisations({
   const toutes = await db.select().from(organisations).orderBy(desc(organisations.creeLe));
   const enAttente = toutes.filter((o) => o.statut === "en_attente");
   const groupes = grouper(toutes);
-  const lignes = active.cle === "a-traiter" ? enAttente : toutes;
+
+  const parVue = {
+    "a-traiter": enAttente,
+    next15: toutes.filter((o) => o.type === "startup"),
+    scaleup: toutes.filter((o) => o.type === "pme"),
+    partenaires: toutes.filter((o) => o.type === "partenaire"),
+    doublons: [] as typeof toutes,
+    toutes,
+  } satisfies Record<(typeof VUES)[number]["cle"], typeof toutes>;
+
+  const lignes = parVue[active.cle];
 
   // Le programme et la date de dépôt : c'est ce qui permet de décider lequel garder.
   const dossiers =
@@ -107,7 +128,7 @@ export default async function AdminOrganisations({
         action={{ href: "/admin/organisations/nouvelle", label: "Ajouter un partenaire" }}
       />
 
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         {VUES.map((v) => (
           <Link
             key={v.cle}
@@ -120,14 +141,13 @@ export default async function AdminOrganisations({
           >
             {v.label}
             <span className="ml-1.5 opacity-70">
-              {v.cle === "a-traiter"
-                ? enAttente.length
-                : v.cle === "doublons"
-                  ? groupes.length
-                  : toutes.length}
+              {v.cle === "doublons" ? groupes.length : parVue[v.cle].length}
             </span>
           </Link>
         ))}
+        <span className="ml-auto">
+          <ExportCsv quoi="organisations" label="Exporter les organisations" />
+        </span>
       </div>
 
       {active.cle === "doublons" ? (
@@ -191,7 +211,8 @@ export default async function AdminOrganisations({
           <thead>
             <tr>
               <th className={TH}>Organisation</th>
-              <th className={TH}>Type</th>
+              <th className={TH}>Catégorie</th>
+              <th className={TH}>Secteurs</th>
               <th className={TH}>État</th>
               <th className={`${TH} text-right`}>Fiche</th>
             </tr>
@@ -211,7 +232,25 @@ export default async function AdminOrganisations({
                     <span className="block text-sm text-pierre">{o.localisation}</span>
                   ) : null}
                 </td>
-                <td className={`${TD} text-ardoise`}>{TYPE_ORGANISATION[o.type]}</td>
+                <td className={`${TD} text-ardoise`}>
+                  {/* Le programme pour un lauréat, le métier pour un partenaire : c'est ce qui
+                      distingue réellement deux lignes. « Startup » les distingue à peine. */}
+                  {o.type === "partenaire"
+                    ? o.typePartenaire
+                      ? TYPE_PARTENAIRE[o.typePartenaire]
+                      : TYPE_ORGANISATION.partenaire
+                    : PROGRAMME[programmeDe(o.type)!]}
+                </td>
+                <td className={`${TD} text-sm text-pierre`}>
+                  {o.secteurs.length === 0 ? (
+                    "—"
+                  ) : (
+                    <>
+                      {o.secteurs.slice(0, 2).join(" · ")}
+                      {o.secteurs.length > 2 ? ` +${o.secteurs.length - 2}` : ""}
+                    </>
+                  )}
+                </td>
                 <td className={TD}>
                   <Badge ton={TON_STATUT_ORGANISATION[o.statut]}>
                     {STATUT_ORGANISATION[o.statut]}
