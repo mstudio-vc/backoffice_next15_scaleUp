@@ -4,10 +4,9 @@ import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { demandesOffres, journal, offres, organisations } from "@/db/schema";
 import { exigerRoot } from "@/lib/garde";
-import { EntetePage, Vide } from "@/components/page-entete";
+import { CarteTable, EntetePage, TD, TH, TR, Vide } from "@/components/page-entete";
 import { CATEGORIE_OFFRE, CIBLE_OFFRE } from "@/lib/vocabulaire";
 import { Badge, Pilule } from "@/components/badge";
-import { Couverture } from "@/components/couverture";
 import { ExportCsv } from "@/components/export-csv";
 
 export default async function AdminOffres({
@@ -118,49 +117,67 @@ export default async function AdminOffres({
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {lignes.map(({ offre, partenaire, demandes }) => (
-            <article
-              key={offre.id}
-              className="flex flex-col overflow-hidden rounded bg-white p-4 ring-1 ring-brume"
-            >
-              <Couverture url={offre.couvertureUrl} cadre="-mx-4 -mt-4 mb-3" />
-              <div className="flex flex-wrap items-center gap-2">
-                <Pilule>
-                  {CATEGORIE_OFFRE[offre.categorie]}
-                </Pilule>
-                <Pilule>
-                  {CIBLE_OFFRE[offre.cible]}
-                </Pilule>
-                <span className="ml-auto">
+        /* En liste, comme côté lauréat : un même partenaire publie plusieurs offres — une
+           voiture, une moto, une borne — et des cartes les éloignent au lieu de les comparer. */
+        <CarteTable>
+          <thead>
+            <tr>
+              <th className={TH}>Offre</th>
+              <th className={TH}>Avantage</th>
+              <th className={TH}>Pour qui</th>
+              <th className={`${TH} text-right`}>Demandes</th>
+              <th className={TH}>Jusqu&apos;au</th>
+              <th className={TH}>État</th>
+              <th className={`${TH} text-right`}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lignes.map(({ offre, partenaire, demandes }) => (
+              <tr key={offre.id} className={TR}>
+                <td className={TD}>
+                  <span className="font-bold text-encre">{offre.titre}</span>
+                  <span className="block text-sm text-pierre">{partenaire}</span>
+                </td>
+                <td className={TD}>
+                  <Pilule>{CATEGORIE_OFFRE[offre.categorie]}</Pilule>
+                </td>
+                <td className={`${TD} text-sm text-ardoise`}>{CIBLE_OFFRE[offre.cible]}</td>
+                <td className={`${TD} text-right tabular-nums`}>
+                  {Number(demandes) > 0 ? (
+                    <Link href="/admin/offres/demandes" className="text-vert hover:underline">
+                      {Number(demandes)}
+                    </Link>
+                  ) : (
+                    <span className="text-pierre">—</span>
+                  )}
+                </td>
+                <td className={`${TD} text-sm text-ardoise tabular-nums`}>
+                  {offre.valideJusquAu
+                    ? new Date(offre.valideJusquAu).toLocaleDateString("fr-FR")
+                    : "—"}
+                </td>
+                <td className={TD}>
                   <Badge ton={offre.statut === "publiee" ? "succes" : "inactif"}>
                     {offre.statut === "publiee" ? "Publiée" : "Retirée"}
                   </Badge>
-                </span>
-              </div>
-
-              <h2 className="mt-3 font-bold text-encre">{offre.titre}</h2>
-              <p className="text-sm text-pierre">{partenaire}</p>
-              <p className="mt-2 line-clamp-3 text-sm text-ardoise">{offre.description}</p>
-
-              <div className="mt-4 flex items-center gap-3 border-t border-brume pt-3">
-                <span className="text-sm text-pierre">
-                  {Number(demandes)} demande{Number(demandes) > 1 ? "s" : ""}
-                  {offre.valideJusquAu
-                    ? ` · jusqu'au ${new Date(offre.valideJusquAu).toLocaleDateString("fr-FR")}`
-                    : ""}
-                </span>
-                <form action={basculer} className="ml-auto">
-                  <input type="hidden" name="offreId" value={offre.id} />
-                  <input type="hidden" name="vers" value={offre.statut === "publiee" ? "retiree" : "publiee"} />
-                  <button className="rounded border border-brume px-3 py-1.5 text-sm font-normal text-graphite transition hover:bg-papier">
-                    {offre.statut === "publiee" ? "Retirer" : "Republier"}
-                  </button>
-                </form>
-              </div>
-            </article>
-          ))}
-        </div>
+                </td>
+                <td className={`${TD} text-right`}>
+                  <form action={basculer}>
+                    <input type="hidden" name="offreId" value={offre.id} />
+                    <input
+                      type="hidden"
+                      name="vers"
+                      value={offre.statut === "publiee" ? "retiree" : "publiee"}
+                    />
+                    <button className="rounded border border-brume px-3 py-1 text-sm font-normal text-graphite transition hover:bg-papier">
+                      {offre.statut === "publiee" ? "Retirer" : "Republier"}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </CarteTable>
       )}
     </>
   );
