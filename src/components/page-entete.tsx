@@ -48,7 +48,11 @@ export function Retour({ href, label }: { href: string; label: string }) {
 
 /** Carte de formulaire, de largeur lisible : un formulaire n'a pas à s'étaler. */
 export function CarteFormulaire({ children }: { children: React.ReactNode }) {
-  return <div className="max-w-2xl rounded bg-white p-5 ring-1 ring-brume">{children}</div>;
+  return (
+    <div className="max-w-2xl rounded bg-white p-5 ring-1 ring-brume">
+      {children}
+    </div>
+  );
 }
 
 /**

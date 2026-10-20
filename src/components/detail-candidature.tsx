@@ -14,7 +14,7 @@ export function DetailCandidature({ donnees }: { donnees: Record<string, unknown
   const { sections, pieces, renseignees } = lireCandidature(donnees);
 
   if (sections.length === 0 && pieces.length === 0) {
-    return <p className="text-base text-pierre">Aucune réponse exploitable dans ce dossier.</p>;
+    return <p className="text-base text-pierre">Dossier sans réponse exploitable.</p>;
   }
 
   return (
@@ -109,8 +109,7 @@ export function DetailCandidature({ donnees }: { donnees: Record<string, unknown
                 un visiteur reçoit une page de connexion, pas le fichier. On le dit, plutôt que
                 de proposer un téléchargement qui échouera. */}
             <p className="mb-3 border-l-4 border-orange bg-orange/5 px-3 py-2 text-sm text-graphite">
-              Ces fichiers sont restés chez Jotform. Les liens ne s&apos;ouvrent qu&apos;avec le
-              compte qui détient le formulaire — leur reprise sur la plateforme est en cours.
+              Fichiers restés chez Jotform, reprise en cours.
             </p>
             <ul className="flex flex-col gap-2">
               {pieces.map((p) => (

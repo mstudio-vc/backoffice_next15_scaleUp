@@ -166,9 +166,7 @@ export async function FicheOffre({
                   Demande {STATUT_DEMANDE[demandeStatut].toLowerCase()}
                 </Badge>
                 <p className="mt-2 text-sm text-pierre">
-                  {demandeStatut === "envoyee"
-                    ? "Le partenaire vous répondra depuis la plateforme."
-                    : "Reprenez contact par courriel si besoin."}
+                  {demandeStatut === "envoyee" ? "Réponse à venir." : "Contact direct possible."}
                 </p>
               </>
             ) : (

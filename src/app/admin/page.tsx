@@ -266,7 +266,7 @@ export default async function AdminAccueil() {
                     <span className="inline-flex items-center justify-end gap-2">
                       <span
                         aria-hidden
-                        className="h-1.5 rounded-full bg-vert"
+                        className="h-1.5 rounded bg-vert"
                         style={{
                           width: `${
                             Number(collaborations[0].laureats) > 0

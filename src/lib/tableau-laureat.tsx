@@ -195,9 +195,7 @@ export async function TableauLaureat({
 
         <Carte titre="Vos secteurs" aide="Tels qu'ils apparaissent dans l'annuaire">
           {org.secteurs.length === 0 ? (
-            <p className="text-sm text-pierre">
-              Aucun secteur déclaré — votre fiche n&apos;apparaîtra dans aucun filtre.
-            </p>
+            <p className="text-sm text-pierre">Aucun secteur déclaré.</p>
           ) : (
             <ul className="flex flex-wrap gap-1.5">
               {org.secteurs.map((s) => (

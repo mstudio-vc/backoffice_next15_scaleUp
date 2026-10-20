@@ -40,15 +40,18 @@ export function EspaceLayout({
       <div className="filet-programme h-1.5" />
 
       <header className="border-b border-brume bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-6 py-2">
+        {/* Le verrou officiel était posé à 30 px de haut, et à 18 px dans l'administration.
+            Ces logos font 7,3:1 et 8,6:1 : à cette hauteur, le nom du Ministère qu'ils portent
+            n'est plus lisible, et une marque d'État illisible ne marque rien. */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-3">
           <Link href={nav[0]?.href ?? "/"} className="flex items-center gap-3">
             {programme ? (
-              <Logo programme={programme} hauteur={30} priority />
+              <Logo programme={programme} hauteur={46} priority />
             ) : (
-              <span className="flex items-center gap-2.5">
-                <Logo programme="next15" hauteur={22} priority />
-                <span className="h-5 w-px bg-brume" />
-                <Logo programme="scaleup" hauteur={18} priority />
+              <span className="flex flex-wrap items-center gap-3">
+                <Logo programme="next15" hauteur={34} priority />
+                <span className="h-7 w-px bg-brume" />
+                <Logo programme="scaleup" hauteur={28} priority />
               </span>
             )}
           </Link>

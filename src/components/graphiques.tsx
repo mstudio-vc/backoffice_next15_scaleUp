@@ -62,9 +62,9 @@ export function Barres({
             {p.valeur}
             {unite ? ` ${unite}${p.valeur > 1 ? "s" : ""}` : ""}
           </span>
-          <span className="col-span-2 h-1.5 rounded-full bg-papier">
+          <span className="col-span-2 h-1.5 rounded bg-papier">
             <span
-              className="block h-full rounded-full"
+              className="block h-full rounded"
               style={{
                 width: `${Math.max((p.valeur / sommet) * 100, p.valeur > 0 ? 2 : 0)}%`,
                 background: TEINTES[i % TEINTES.length],
@@ -136,7 +136,8 @@ export function Anneau({
         <text
           x="20"
           y="20"
-          className="rotate-90 fill-encre text-[7px] font-bold"
+          fontSize={7}
+          className="rotate-90 fill-encre font-bold"
           textAnchor="middle"
           dominantBaseline="central"
           transform="rotate(90 20 20)"
@@ -151,7 +152,7 @@ export function Anneau({
             <li key={p.label} className="flex items-baseline gap-2">
               <span
                 aria-hidden
-                className="size-2.5 shrink-0 translate-y-0.5 rounded-sm"
+                className="size-2.5 shrink-0 translate-y-0.5 rounded"
                 style={{ background: TEINTES[i % TEINTES.length] }}
               />
               <span className="truncate text-sm text-graphite">{p.label}</span>
@@ -173,7 +174,7 @@ export function Anneau({
  */
 export function Courbe({ points, unite = "" }: { points: Part[]; unite?: string }) {
   if (points.length < 2) {
-    return <p className="text-sm text-pierre">Pas assez de points pour tracer une évolution.</p>;
+    return <p className="text-sm text-pierre">Évolution non traçable.</p>;
   }
 
   const L = 300;

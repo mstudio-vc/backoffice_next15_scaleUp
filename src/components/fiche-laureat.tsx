@@ -153,9 +153,7 @@ export async function FicheLaureat({ organisationId, base }: { organisationId: s
 
           <label className="flex flex-col gap-1 text-base font-bold text-graphite sm:col-span-2">
             Description
-            <span className="font-normal text-pierre">
-              Une présentation courte — c&apos;est elle qui apparaît dans l&apos;annuaire.
-            </span>
+            <span className="font-normal text-pierre">Visible dans l&apos;annuaire.</span>
             <textarea
               name="description"
               rows={3}
